@@ -1,0 +1,48 @@
+# --- Virtual environments ---
+training/venv/
+venv/
+env/
+.venv/
+
+# --- Python cache/bytecode ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- Model checkpoints & embeddings (large, regenerable) ---
+training/outputs/checkpoints/*.pt
+training/outputs/embeddings/*.npy
+training/outputs/smote/*.npy
+*.pt
+*.npy
+
+# --- Dataset archives ---
+zips/
+*.zip
+
+# --- Derived / processed datasets (regenerable via scripts) ---
+cleaned/
+dataset_splits/
+samples/
+training/final_corpus.csv
+
+# --- Optional: raw source datasets (uncomment if large or licensed) ---
+# fake_job_postings.csv
+# indian-job-market-dataset-2025.xlsx
+# Job Posting.csv
+# LinkedIn_Jobs_Data_India.csv
+# marketing_sample_for_trulia_com-real_estate__20190901_20191031__30k_data.csv
+# Pakistan Available Job Dec 19 - Mar-21.csv
+
+# --- Optional: session logs / screenshots ---
+# terminal sessions/
+# stitched fronted/**/screen.png
+
+# --- OS / editor junk ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+marketing_sample_for_trulia_com-real_estate__20190901_20191031__30k_data.csv
+.~lock.*#

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+
+<html class="light dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RecruitShield AI - Results Dashboard</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "tertiary-container": "#5b799a",
+                "surface": "#0f1415",
+                "on-secondary-fixed": "#061f23",
+                "tertiary-fixed": "#d0e4ff",
+                "secondary-fixed": "#cde7ed",
+                "outline": "#8a9294",
+                "surface-container-lowest": "#0a0f10",
+                "surface-container": "#1b2021",
+                "surface-container-high": "#262b2c",
+                "surface-bright": "#353a3b",
+                "tertiary": "#abc9ee",
+                "primary-fixed": "#b9ebf6",
+                "primary-fixed-dim": "#9ecfda",
+                "secondary-container": "#354d51",
+                "tertiary-fixed-dim": "#abc9ee",
+                "on-error-container": "#ffdad6",
+                "inverse-surface": "#dfe3e4",
+                "surface-tint": "#9ecfda",
+                "on-error": "#690005",
+                "on-tertiary-container": "#ffffff",
+                "on-secondary-container": "#a4bdc2",
+                "on-tertiary": "#103250",
+                "surface-dim": "#0f1415",
+                "on-background": "#dfe3e4",
+                "surface-container-low": "#171c1d",
+                "on-surface": "#dfe3e4",
+                "on-primary-fixed-variant": "#194d57",
+                "on-secondary-fixed-variant": "#334a4f",
+                "primary-container": "#4e7e88",
+                "outline-variant": "#40484a",
+                "error-container": "#93000a",
+                "on-secondary": "#1c3438",
+                "error": "#ffb4ab",
+                "inverse-on-surface": "#2c3132",
+                "secondary-fixed-dim": "#b2cbd0",
+                "surface-container-highest": "#313637",
+                "on-tertiary-fixed-variant": "#2a4967",
+                "surface-variant": "#313637",
+                "on-tertiary-fixed": "#001d34",
+                "secondary": "#b2cbd0",
+                "on-primary-container": "#ffffff",
+                "primary": "#9ecfda",
+                "on-primary-fixed": "#001f25",
+                "on-surface-variant": "#c0c8ca",
+                "on-primary": "#00363e",
+                "inverse-primary": "#35656f",
+                "background": "#0f1415"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "md": "24px",
+                "base": "8px",
+                "xs": "4px",
+                "margin-desktop": "40px",
+                "sm": "12px",
+                "container-max": "1280px",
+                "lg": "48px",
+                "margin-mobile": "16px",
+                "gutter": "24px",
+                "xl": "80px"
+        },
+        "fontFamily": {
+                "h1-mobile": [
+                        "Public Sans"
+                ],
+                "button": [
+                        "Public Sans"
+                ],
+                "body-sm": [
+                        "Public Sans"
+                ],
+                "label-caps": [
+                        "Public Sans"
+                ],
+                "body-lg": [
+                        "Public Sans"
+                ],
+                "h3-desktop": [
+                        "Public Sans"
+                ],
+                "body-md": [
+                        "Public Sans"
+                ],
+                "h2-desktop": [
+                        "Public Sans"
+                ],
+                "h1-desktop": [
+                        "Public Sans"
+                ]
+        },
+        "fontSize": {
+                "h1-mobile": [
+                        "32px",
+                        {
+                                "lineHeight": "1.2",
+                                "fontWeight": "700"
+                        }
+                ],
+                "button": [
+                        "16px",
+                        {
+                                "lineHeight": "1.0",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-sm": [
+                        "14px",
+                        {
+                                "lineHeight": "1.5",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-caps": [
+                        "12px",
+                        {
+                                "lineHeight": "1.0",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "1.6",
+                                "fontWeight": "400"
+                        }
+                ],
+                "h3-desktop": [
+                        "24px",
+                        {
+                                "lineHeight": "1.4",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "1.6",
+                                "fontWeight": "400"
+                        }
+                ],
+                "h2-desktop": [
+                        "36px",
+                        {
+                                "lineHeight": "1.3",
+                                "fontWeight": "600"
+                        }
+                ],
+                "h1-desktop": [
+                        "48px",
+                        {
+                                "lineHeight": "1.2",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        .circle-progress {
+            stroke-dasharray: 283;
+            stroke-dashoffset: 283;
+            transition: stroke-dashoffset 1.5s ease-out;
+        }
+        .expandable-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .expandable-card.expanded .expandable-content {
+            max-height: 200px; /* Arbitrary large max-height for animation */
+        }
+        .expandable-card.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<nav class="bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md shadow-sm fixed top-0 w-full z-50">
+<div class="flex justify-between items-center h-20 px-margin-desktop max-w-container-max mx-auto">
+<div class="font-h3-desktop text-h3-desktop font-bold text-primary dark:text-primary-fixed-dim">
+                RecruitShield AI
+            </div>
+<!-- Desktop Navigation -->
+<div class="hidden md:flex gap-gutter items-center">
+<a class="text-on-surface-variant dark:text-surface-variant font-button text-button hover:text-primary dark:hover:text-primary-fixed transition-colors active:scale-95 transition-transform duration-150" href="#">Verify</a>
+<a class="text-on-surface-variant dark:text-surface-variant font-button text-button hover:text-primary dark:hover:text-primary-fixed transition-colors active:scale-95 transition-transform duration-150" href="#">How it Works</a>
+<a class="text-primary dark:text-primary-fixed-dim border-b-2 border-primary pb-1 font-button text-button hover:text-primary dark:hover:text-primary-fixed transition-colors active:scale-95 transition-transform duration-150" href="#">Reports</a>
+</div>
+<button class="font-button text-button text-primary dark:text-primary-fixed-dim hidden md:block hover:text-primary dark:hover:text-primary-fixed transition-colors active:scale-95 transition-transform duration-150">
+                Sign In
+            </button>
+<!-- Mobile Menu Toggle -->
+<button class="md:hidden text-primary">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-[120px] pb-xl px-margin-mobile md:px-margin-desktop max-w-[800px] mx-auto w-full">
+<!-- Header / Trust Score Section -->
+<section class="flex flex-col items-center mb-xl">
+<h1 class="font-h2-desktop text-h2-desktop text-on-background mb-lg text-center">Analysis Complete</h1>
+<!-- Circular Gauge -->
+<div class="relative w-64 h-64 mb-md">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 100 100">
+<!-- Background Circle -->
+<circle cx="50" cy="50" fill="none" r="45" stroke="#d8faff" stroke-width="8"></circle>
+<!-- Progress Circle (Mint/Green tone for 'Likely Genuine') -->
+<circle class="circle-progress" cx="50" cy="50" fill="none" r="45" stroke="#006b5f" stroke-linecap="round" stroke-width="8" style="stroke-dashoffset: 79.24;"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-label-caps text-label-caps text-outline mb-xs">TRUST SCORE</span>
+<span class="font-h1-desktop text-h1-desktop text-secondary" style="font-size: 64px; line-height: 1;">72</span>
+<span class="font-body-md text-body-md text-secondary mt-xs bg-secondary-container text-on-secondary-container px-sm py-xs rounded-full">Likely Genuine</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant text-center max-w-[500px]">
+                We have analyzed the provided materials. Based on our AI models and verification databases, this opportunity appears to be legitimate, though minor warnings were flagged.
+            </p>
+</section>
+<!-- Results Grid -->
+<section class="flex flex-col gap-sm mb-xl">
+<!-- Card 1: Language Analysis (Pass) -->
+<div class="expandable-card bg-surface-container-lowest rounded-xl p-md shadow-level-1 hover:shadow-level-2 transition-shadow cursor-pointer flex flex-col border-l-4 border-secondary border-t border-r border-b border-surface-variant">
+<div class="flex items-start justify-between" onclick="toggleCard(this.parentElement)">
+<div class="flex items-center gap-sm">
+<div class="bg-secondary-container text-secondary p-xs rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div>
+<h3 class="font-h3-desktop text-[20px] text-on-background">Language Analysis</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">No common fraud patterns detected in the text.</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline expand-icon transition-transform" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+<!-- Card 2: Document Check (Warning) -->
+<div class="expandable-card bg-surface-container-lowest rounded-xl p-md shadow-level-1 hover:shadow-level-2 transition-shadow cursor-pointer flex flex-col border-l-4 border-tertiary-container border-t border-r border-b border-surface-variant">
+<div class="flex items-start justify-between" onclick="toggleCard(this.parentElement)">
+<div class="flex items-center gap-sm">
+<div class="bg-tertiary-fixed text-tertiary p-xs rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="warning" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+<div>
+<h3 class="font-h3-desktop text-[20px] text-on-background">Document Check</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Metadata reveals recent edits to the document.</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline expand-icon transition-transform" data-icon="expand_more">expand_more</span>
+</div>
+<div class="expandable-content mt-sm pl-xl">
+<p class="font-body-sm text-body-sm text-on-surface-variant bg-surface-container-low p-sm rounded-lg">
+                        Document structure contains inconsistencies with official company templates. Author metadata indicates modification by an unknown entity shortly before sending.
+                    </p>
+</div>
+</div>
+<!-- Card 3: Company Verification (Pass) -->
+<div class="expandable-card bg-surface-container-lowest rounded-xl p-md shadow-level-1 hover:shadow-level-2 transition-shadow cursor-pointer flex flex-col border-l-4 border-secondary border-t border-r border-b border-surface-variant">
+<div class="flex items-start justify-between" onclick="toggleCard(this.parentElement)">
+<div class="flex items-center gap-sm">
+<div class="bg-secondary-container text-secondary p-xs rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div>
+<h3 class="font-h3-desktop text-[20px] text-on-background">Company Verification</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Email domain matches official company records.</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline expand-icon transition-transform" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+<!-- Card 4: Link Safety (Pass) -->
+<div class="expandable-card bg-surface-container-lowest rounded-xl p-md shadow-level-1 hover:shadow-level-2 transition-shadow cursor-pointer flex flex-col border-l-4 border-secondary border-t border-r border-b border-surface-variant">
+<div class="flex items-start justify-between" onclick="toggleCard(this.parentElement)">
+<div class="flex items-center gap-sm">
+<div class="bg-secondary-container text-secondary p-xs rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div>
+<h3 class="font-h3-desktop text-[20px] text-on-background">Link Safety</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">All scanned URLs are secure and verified.</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline expand-icon transition-transform" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+</section>
+<!-- Actions -->
+<section class="flex flex-col sm:flex-row gap-md justify-center items-center">
+<button class="w-full sm:w-auto font-button text-button px-lg py-sm rounded-lg border-2 border-primary text-primary hover:bg-surface-variant transition-colors flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined" data-icon="download">download</span>
+                Download Full Report
+            </button>
+<button class="w-full sm:w-auto font-button text-button px-lg py-sm rounded-lg bg-primary text-on-primary hover:bg-primary-container transition-colors flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+                Check Another
+            </button>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low dark:bg-surface-dim w-full py-xl mt-auto">
+<div class="max-w-container-max mx-auto px-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-md">
+<div>
+<div class="font-h3-desktop text-h3-desktop font-bold text-primary-fixed-dim mb-sm">
+                    RecruitShield AI
+                </div>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-sm">
+                    © 2024 RecruitShield AI. All rights reserved. Protecting job seekers through transparency and AI.
+                </p>
+</div>
+<div class="flex flex-wrap gap-md md:justify-end items-start font-body-sm text-body-sm">
+<a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Resources</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Security</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Terms of Service</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Support</a>
+</div>
+</div>
+</footer>
+<script>
+        function toggleCard(element) {
+            element.classList.toggle('expanded');
+        }
+
+        // Animate the circle progress on load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const circle = document.querySelector('.circle-progress');
+                // Calculate dashoffset for 72%
+                // 283 - (283 * 0.72) = 79.24
+                circle.style.strokeDashoffset = '79.24';
+            }, 100);
+        });
+    </script>
+</body></html>

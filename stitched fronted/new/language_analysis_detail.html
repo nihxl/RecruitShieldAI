@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Language Analysis Detail - RecruitShield AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary-container": "#ffffff",
+                      "on-error-container": "#ffdad6",
+                      "primary-fixed-dim": "#9ecfda",
+                      "primary-fixed": "#b9ebf6",
+                      "surface-variant": "#313637",
+                      "secondary-fixed-dim": "#b2cbd0",
+                      "error-container": "#93000a",
+                      "background": "#0f1415",
+                      "inverse-primary": "#35656f",
+                      "inverse-surface": "#dfe3e4",
+                      "surface-container-highest": "#313637",
+                      "primary": "#9ecfda",
+                      "on-tertiary": "#103250",
+                      "on-error": "#690005",
+                      "on-secondary": "#1c3438",
+                      "surface": "#0f1415",
+                      "tertiary-container": "#5b799a",
+                      "on-tertiary-fixed": "#001d34",
+                      "outline": "#8a9294",
+                      "on-surface": "#dfe3e4",
+                      "tertiary-fixed-dim": "#abc9ee",
+                      "on-surface-variant": "#c0c8ca",
+                      "primary-container": "#4e7e88",
+                      "inverse-on-surface": "#2c3132",
+                      "tertiary-fixed": "#d0e4ff",
+                      "secondary": "#b2cbd0",
+                      "surface-container": "#1b2021",
+                      "on-tertiary-fixed-variant": "#2a4967",
+                      "tertiary": "#abc9ee",
+                      "secondary-fixed": "#cde7ed",
+                      "surface-bright": "#353a3b",
+                      "on-tertiary-container": "#ffffff",
+                      "on-primary-fixed": "#001f25",
+                      "on-primary-fixed-variant": "#194d57",
+                      "surface-container-low": "#171c1d",
+                      "surface-dim": "#0f1415",
+                      "secondary-container": "#354d51",
+                      "on-secondary-fixed": "#061f23",
+                      "error": "#ffb4ab",
+                      "on-secondary-container": "#a4bdc2",
+                      "outline-variant": "#40484a",
+                      "on-primary": "#00363e",
+                      "surface-container-high": "#262b2c",
+                      "on-secondary-fixed-variant": "#334a4f",
+                      "surface-container-lowest": "#0a0f10",
+                      "on-background": "#dfe3e4",
+                      "surface-tint": "#9ecfda"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "2xl": "1rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "16px",
+                      "lg": "48px",
+                      "gutter": "24px",
+                      "margin-desktop": "40px",
+                      "md": "24px",
+                      "xs": "4px",
+                      "sm": "12px",
+                      "container-max": "1280px",
+                      "base": "8px",
+                      "xl": "80px"
+              },
+              "fontFamily": {
+                      "h3-desktop": [
+                              "Public Sans"
+                      ],
+                      "body-md": [
+                              "Public Sans"
+                      ],
+                      "label-caps": [
+                              "Public Sans"
+                      ],
+                      "body-lg": [
+                              "Public Sans"
+                      ],
+                      "h1-mobile": [
+                              "Public Sans"
+                      ],
+                      "body-sm": [
+                              "Public Sans"
+                      ],
+                      "h1-desktop": [
+                              "Public Sans"
+                      ],
+                      "h2-desktop": [
+                              "Public Sans"
+                      ],
+                      "button": [
+                              "Public Sans"
+                      ]
+              },
+              "fontSize": {
+                      "h3-desktop": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.0",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "h1-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "h1-desktop": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "h2-desktop": [
+                              "36px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "button": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.0",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .highlight-phrase {
+            background-color: rgba(91, 121, 154, 0.15); /* tertiary-container with opacity */
+            border-bottom: 1px dotted theme('colors.tertiary-container');
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            position: relative;
+            display: inline-block;
+        }
+        .highlight-phrase:hover {
+            background-color: rgba(91, 121, 154, 0.3);
+        }
+        
+        .highlight-phrase:hover .tooltip-custom {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .tooltip-custom {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(4px);
+            transition: all 0.2s ease;
+            position: absolute;
+            bottom: calc(100% + 4px);
+            left: 50%;
+            transform: translateX(-50%) translateY(4px);
+            z-index: 10;
+            white-space: nowrap;
+        }
+        
+        .tooltip-custom::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: theme('colors.tertiary-container') transparent transparent transparent;
+        }
+
+      </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Navigation (Task-focused, suppressed main nav) -->
+<header class="bg-surface-container-low/80 backdrop-blur-md shadow-sm fixed top-0 w-full z-50 flex items-center justify-between px-margin-mobile md:px-margin-desktop h-16 border-b border-outline-variant/30">
+<div class="flex items-center gap-4">
+<button aria-label="Go back" class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:scale-95 duration-200 flex items-center justify-center p-2 rounded-full hover:bg-surface-variant">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-h3-desktop text-h3-desktop text-on-surface">Why we flagged this</h1>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Analysis ID: </span>
+<span class="font-body-sm text-body-sm text-primary-fixed-dim">#RS-7829-A</span>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-[88px] pb-xl px-margin-mobile md:px-margin-desktop w-full max-w-container-max mx-auto">
+<!-- Context Header -->
+<div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-error" data-icon="gpp_maybe" data-weight="fill">gpp_maybe</span>
+<span class="font-label-caps text-label-caps text-error uppercase tracking-wider">High Risk Detected</span>
+</div>
+<h2 class="font-h2-desktop text-h2-desktop text-on-surface mb-1">Senior Data Entry Specialist</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Global Tech Solutions Inc. • Remote</p>
+</div>
+<button class="font-button text-button bg-surface-variant text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high px-4 py-2 rounded-lg transition-colors border border-outline-variant flex items-center gap-2 w-fit">
+<span class="material-symbols-outlined text-sm" data-icon="download">download</span>
+                Export Report
+            </button>
+</div>
+<!-- Layout Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+<!-- Main Reading Pane -->
+<div class="lg:col-span-8 bg-surface-container-low rounded-2xl shadow-sm border border-outline-variant/20 p-6 md:p-8 relative overflow-hidden">
+<!-- Subtle Gradient Accent -->
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary-container/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+<div class="flex items-center justify-between mb-6 pb-4 border-b border-outline-variant/30">
+<h3 class="font-h3-desktop text-h3-desktop text-on-surface">Original Listing Text</h3>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary-fixed-dim text-[20px]" data-icon="find_in_page">find_in_page</span>
+<span class="font-body-sm text-body-sm text-tertiary-fixed-dim">3 flags identified</span>
+</div>
+</div>
+<div class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed space-y-6">
+<p>
+                        We are currently seeking a highly motivated Senior Data Entry Specialist to join our rapidly expanding global team. This is a fully remote position offering flexible hours and highly competitive compensation.
+                    </p>
+<p>
+                        Due to an unexpected increase in project volume, we have an <span class="highlight-phrase text-on-surface"><span class="tooltip-custom bg-tertiary-container text-on-tertiary-container font-body-sm text-body-sm px-3 py-1 rounded-md shadow-md">Artificial Urgency Pattern</span>urgent start required</span>. The successful candidate must be ready to begin orientation within 24 hours of accepting the offer. We provide all necessary home office equipment, including a MacBook Pro and dual monitors.
+                    </p>
+<p>
+                        To expedite the equipment provisioning process, selected candidates will be responsible for <span class="highlight-phrase text-on-surface"><span class="tooltip-custom bg-tertiary-container text-on-tertiary-container font-body-sm text-body-sm px-3 py-1 rounded-md shadow-md">Financial Request Flag</span>wiring funds</span> to our approved vendor for the initial setup. This amount will be fully reimbursed in your first paycheck. Please ensure you have your <span class="highlight-phrase text-on-surface"><span class="tooltip-custom bg-tertiary-container text-on-tertiary-container font-body-sm text-body-sm px-3 py-1 rounded-md shadow-md">Premature PII Request</span>direct deposit details</span> ready to submit along with your signed offer letter to facilitate the reimbursement.
+                    </p>
+<p>
+                        No prior experience is strictly necessary, as comprehensive training will be provided. We value dedication and a quick learning curve over traditional credentials. If you are ready to jumpstart your career, apply immediately before the positions are filled.
+                    </p>
+</div>
+</div>
+<!-- Summary Sidebar -->
+<div class="lg:col-span-4 space-y-4">
+<!-- Overall Score Card -->
+<div class="bg-surface-container rounded-xl p-5 border border-outline-variant/20 shadow-sm">
+<h4 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-4">Risk Assessment</h4>
+<div class="flex items-center gap-4 mb-2">
+<div class="w-16 h-16 rounded-full border-4 border-error flex items-center justify-center bg-error-container/20">
+<span class="font-h2-desktop text-h2-desktop text-error font-bold">88</span>
+</div>
+<div>
+<div class="font-h3-desktop text-h3-desktop text-on-surface">Critical Risk</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Matches multiple scam profiles</div>
+</div>
+</div>
+</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mt-6 mb-2 px-1">Detailed Findings</div>
+<!-- Flag Items -->
+<div class="flex flex-col gap-3">
+<!-- Flag 1 -->
+<div class="bg-surface-container hover:bg-surface-container-high transition-colors rounded-xl p-4 border border-outline-variant/20 shadow-sm cursor-default">
+<div class="flex items-start justify-between mb-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-error text-[20px]" data-icon="warning">warning</span>
+<h5 class="font-body-md text-body-md font-semibold text-on-surface">Equipment Fee Scam</h5>
+</div>
+<span class="font-label-caps text-label-caps bg-surface-variant text-on-surface-variant px-2 py-0.5 rounded text-[10px]">98% Confidence</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-3">
+                            Requesting the applicant to wire funds for equipment, promising reimbursement, is a definitive marker of an advance-fee fraud scheme.
+                        </p>
+<div class="bg-background rounded px-3 py-2 border-l-2 border-tertiary-container">
+<span class="font-body-sm text-body-sm text-on-surface italic">"...responsible for wiring funds..."</span>
+</div>
+</div>
+<!-- Flag 2 -->
+<div class="bg-surface-container hover:bg-surface-container-high transition-colors rounded-xl p-4 border border-outline-variant/20 shadow-sm cursor-default">
+<div class="flex items-start justify-between mb-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-fixed-dim text-[20px]" data-icon="timer">timer</span>
+<h5 class="font-body-md text-body-md font-semibold text-on-surface">Artificial Urgency</h5>
+</div>
+<span class="font-label-caps text-label-caps bg-surface-variant text-on-surface-variant px-2 py-0.5 rounded text-[10px]">92% Confidence</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-3">
+                            Language designed to rush the applicant into a decision before they can thoroughly vet the opportunity or company.
+                        </p>
+<div class="bg-background rounded px-3 py-2 border-l-2 border-tertiary-container">
+<span class="font-body-sm text-body-sm text-on-surface italic">"...urgent start required."</span>
+</div>
+</div>
+<!-- Flag 3 -->
+<div class="bg-surface-container hover:bg-surface-container-high transition-colors rounded-xl p-4 border border-outline-variant/20 shadow-sm cursor-default">
+<div class="flex items-start justify-between mb-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-fixed-dim text-[20px]" data-icon="policy">policy</span>
+<h5 class="font-body-md text-body-md font-semibold text-on-surface">Premature PII Request</h5>
+</div>
+<span class="font-label-caps text-label-caps bg-surface-variant text-on-surface-variant px-2 py-0.5 rounded text-[10px]">85% Confidence</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-3">
+                            Asking for sensitive banking details during the initial onboarding or interview phase before formal verification.
+                        </p>
+<div class="bg-background rounded px-3 py-2 border-l-2 border-tertiary-container">
+<span class="font-body-sm text-body-sm text-on-surface italic">"...direct deposit details ready..."</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

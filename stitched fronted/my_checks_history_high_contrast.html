@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>My Checks - RecruitShield AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "tertiary-container": "#5b799a",
+                "surface": "#0f1415",
+                "on-secondary-fixed": "#061f23",
+                "tertiary-fixed": "#d0e4ff",
+                "secondary-fixed": "#cde7ed",
+                "outline": "#8a9294",
+                "surface-container-lowest": "#0a0f10",
+                "surface-container": "#1b2021",
+                "surface-container-high": "#262b2c",
+                "surface-bright": "#353a3b",
+                "tertiary": "#abc9ee",
+                "primary-fixed": "#b9ebf6",
+                "primary-fixed-dim": "#9ecfda",
+                "secondary-container": "#354d51",
+                "tertiary-fixed-dim": "#abc9ee",
+                "on-error-container": "#ffdad6",
+                "inverse-surface": "#dfe3e4",
+                "surface-tint": "#9ecfda",
+                "on-error": "#690005",
+                "on-tertiary-container": "#ffffff",
+                "on-secondary-container": "#a4bdc2",
+                "on-tertiary": "#103250",
+                "surface-dim": "#0f1415",
+                "on-background": "#dfe3e4",
+                "surface-container-low": "#171c1d",
+                "on-surface": "#dfe3e4",
+                "on-primary-fixed-variant": "#194d57",
+                "on-secondary-fixed-variant": "#334a4f",
+                "primary-container": "#4e7e88",
+                "outline-variant": "#40484a",
+                "error-container": "#93000a",
+                "on-secondary": "#1c3438",
+                "error": "#ffb4ab",
+                "inverse-on-surface": "#2c3132",
+                "secondary-fixed-dim": "#b2cbd0",
+                "surface-container-highest": "#313637",
+                "on-tertiary-fixed-variant": "#2a4967",
+                "surface-variant": "#313637",
+                "on-tertiary-fixed": "#001d34",
+                "secondary": "#b2cbd0",
+                "on-primary-container": "#ffffff",
+                "primary": "#9ecfda",
+                "on-primary-fixed": "#001f25",
+                "on-surface-variant": "#c0c8ca",
+                "on-primary": "#00363e",
+                "inverse-primary": "#35656f",
+                "background": "#0f1415"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "md": "24px",
+                "base": "8px",
+                "xs": "4px",
+                "margin-desktop": "40px",
+                "sm": "12px",
+                "container-max": "1280px",
+                "lg": "48px",
+                "margin-mobile": "16px",
+                "gutter": "24px",
+                "xl": "80px"
+        },
+        "fontFamily": {
+                "h1-mobile": [
+                        "Public Sans"
+                ],
+                "button": [
+                        "Public Sans"
+                ],
+                "body-sm": [
+                        "Public Sans"
+                ],
+                "label-caps": [
+                        "Public Sans"
+                ],
+                "body-lg": [
+                        "Public Sans"
+                ],
+                "h3-desktop": [
+                        "Public Sans"
+                ],
+                "body-md": [
+                        "Public Sans"
+                ],
+                "h2-desktop": [
+                        "Public Sans"
+                ],
+                "h1-desktop": [
+                        "Public Sans"
+                ]
+        },
+        "fontSize": {
+                "h1-mobile": [
+                        "32px",
+                        {
+                                "lineHeight": "1.2",
+                                "fontWeight": "700"
+                        }
+                ],
+                "button": [
+                        "16px",
+                        {
+                                "lineHeight": "1.0",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-sm": [
+                        "14px",
+                        {
+                                "lineHeight": "1.5",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-caps": [
+                        "12px",
+                        {
+                                "lineHeight": "1.0",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "1.6",
+                                "fontWeight": "400"
+                        }
+                ],
+                "h3-desktop": [
+                        "24px",
+                        {
+                                "lineHeight": "1.4",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "1.6",
+                                "fontWeight": "400"
+                        }
+                ],
+                "h2-desktop": [
+                        "36px",
+                        {
+                                "lineHeight": "1.3",
+                                "fontWeight": "600"
+                        }
+                ],
+                "h1-desktop": [
+                        "48px",
+                        {
+                                "lineHeight": "1.2",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        .shadow-level-1 {
+            box-shadow: 0 4px 20px rgba(1, 58, 64, 0.05);
+        }
+        .shadow-level-2 {
+            box-shadow: 0 8px 30px rgba(1, 58, 64, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-md shadow-sm">
+<div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 max-w-container-max mx-auto">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-3xl" data-weight="fill" style="font-variation-settings: 'FILL' 1;">shield_person</span>
+<span class="text-h3-desktop font-h3-desktop text-primary">RecruitShield AI</span>
+</div>
+<div class="hidden md:flex gap-lg items-center">
+<a class="text-on-surface font-body-md text-body-md hover:text-primary transition-colors" href="#">Verify</a>
+<a class="text-on-surface font-body-md text-body-md hover:text-primary transition-colors" href="#">How it Works</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1" href="#">Reports</a>
+</div>
+<div class="flex gap-md items-center">
+<button class="hidden md:block text-primary font-button text-button hover:text-primary-container transition-colors">Log In</button>
+<button class="bg-primary-container text-on-primary-container px-6 py-3 rounded-DEFAULT font-button text-button hover:bg-primary transition-colors active:scale-95 duration-200">Get Started</button>
+</div>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-grow pt-32 pb-xl px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto w-full">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-lg gap-md">
+<div>
+<h1 class="font-h1-mobile text-h1-mobile md:font-h1-desktop md:text-h1-desktop text-on-surface mb-xs">My Checks</h1>
+<p class="font-body-lg text-body-lg text-on-surface">Track and manage your previous verification history.</p>
+</div>
+<button class="bg-primary-container text-on-primary-container px-6 py-3 rounded-DEFAULT font-button text-button hover:bg-primary transition-colors flex items-center gap-2 shadow-level-1">
+<span class="material-symbols-outlined">add_circle</span>
+                Check New Opportunity
+            </button>
+</div>
+<!-- Statistics Row -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-md mb-xl">
+<div class="bg-surface-container-lowest p-md rounded-xl shadow-level-1 border border-outline-variant/30 flex items-center gap-md">
+<div class="bg-surface-container p-sm rounded-full text-primary">
+<span class="material-symbols-outlined text-2xl">receipt_long</span>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface uppercase">Total Checks</p>
+<p class="font-h2-desktop text-h2-desktop text-on-surface font-bold">24</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-md rounded-xl shadow-level-1 border-l-4 border-secondary flex items-center gap-md">
+<div class="bg-secondary-container/30 p-sm rounded-full text-secondary">
+<span class="material-symbols-outlined text-2xl">verified_user</span>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface uppercase">High Trust</p>
+<p class="font-h2-desktop text-h2-desktop text-on-surface font-bold">18</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-md rounded-xl shadow-level-1 border-l-4 border-tertiary flex items-center gap-md">
+<div class="bg-tertiary-container/30 p-sm rounded-full text-tertiary">
+<span class="material-symbols-outlined text-2xl">warning</span>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface uppercase">Cautions</p>
+<p class="font-h2-desktop text-h2-desktop text-on-surface font-bold">4</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-md rounded-xl shadow-level-1 border-l-4 border-outline flex items-center gap-md">
+<div class="bg-surface-container-highest p-sm rounded-full text-on-surface">
+<span class="material-symbols-outlined text-2xl">pending</span>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface uppercase">Pending</p>
+<p class="font-h2-desktop text-h2-desktop text-on-surface font-bold">2</p>
+</div>
+</div>
+</div>
+<!-- Main Table Section -->
+<div class="bg-surface-container-lowest rounded-xl shadow-level-2 overflow-hidden">
+<!-- Filters -->
+<div class="p-md border-b border-outline-variant/30 flex flex-col md:flex-row justify-between items-center gap-md bg-surface-container-lowest">
+<div class="relative w-full md:w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface">search</span>
+<input class="w-full pl-10 pr-4 py-2 border border-outline-variant rounded-DEFAULT focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 font-body-md text-body-md bg-transparent text-on-surface" placeholder="Search checks..." type="text"/>
+</div>
+<div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+<button class="px-4 py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-caps text-label-caps whitespace-nowrap">All Types</button>
+<button class="px-4 py-1.5 rounded-full bg-surface border border-outline-variant text-on-surface font-label-caps text-label-caps hover:bg-surface-variant whitespace-nowrap transition-colors">Recent</button>
+<button class="px-4 py-1.5 rounded-full bg-surface border border-outline-variant text-on-surface font-label-caps text-label-caps hover:bg-surface-variant whitespace-nowrap transition-colors">High Risk</button>
+</div>
+</div>
+<!-- Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-highest/50 border-b border-outline-variant/30">
+<th class="p-md font-label-caps text-label-caps text-on-surface uppercase tracking-wider font-bold">Date</th>
+<th class="p-md font-label-caps text-label-caps text-on-surface uppercase tracking-wider font-bold">Source Type</th>
+<th class="p-md font-label-caps text-label-caps text-on-surface uppercase tracking-wider font-bold">Trust Score</th>
+<th class="p-md font-label-caps text-label-caps text-on-surface uppercase tracking-wider text-right font-bold">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20">
+<tr class="hover:bg-surface-container/40 transition-colors">
+<td class="p-md font-body-md text-body-md text-on-surface font-semibold">Oct 24, 2023</td>
+<td class="p-md font-body-md text-body-md text-on-surface flex items-center gap-2 font-semibold">
+<span class="material-symbols-outlined text-on-surface text-sm">work</span> Job Post
+                            </td>
+<td class="p-md">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container/40 text-secondary border border-secondary/40 font-body-sm text-body-sm font-semibold">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                                    94 - Highly Genuine
+                                </span>
+</td>
+<td class="p-md text-right">
+<button class="text-primary font-button text-button hover:text-primary-fixed transition-colors">View Report</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container/40 transition-colors">
+<td class="p-md font-body-md text-body-md text-on-surface font-semibold">Oct 21, 2023</td>
+<td class="p-md font-body-md text-body-md text-on-surface flex items-center gap-2 font-semibold">
+<span class="material-symbols-outlined text-on-surface text-sm">mail</span> Recruiter Email
+                            </td>
+<td class="p-md">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-tertiary-container/40 text-tertiary border border-tertiary/40 font-body-sm text-body-sm font-semibold">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+                                    42 - Caution Advised
+                                </span>
+</td>
+<td class="p-md text-right">
+<button class="text-primary font-button text-button hover:text-primary-fixed transition-colors">View Report</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container/40 transition-colors">
+<td class="p-md font-body-md text-body-md text-on-surface font-semibold">Oct 18, 2023</td>
+<td class="p-md font-body-md text-body-md text-on-surface flex items-center gap-2 font-semibold">
+<span class="material-symbols-outlined text-on-surface text-sm">description</span> Offer Letter
+                            </td>
+<td class="p-md">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container/40 text-secondary border border-secondary/40 font-body-sm text-body-sm font-semibold">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                                    88 - Likely Genuine
+                                </span>
+</td>
+<td class="p-md text-right">
+<button class="text-primary font-button text-button hover:text-primary-fixed transition-colors">View Report</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container/40 transition-colors">
+<td class="p-md font-body-md text-body-md text-on-surface font-semibold">Oct 15, 2023</td>
+<td class="p-md font-body-md text-body-md text-on-surface flex items-center gap-2 font-semibold">
+<span class="material-symbols-outlined text-on-surface text-sm">link</span> Link
+                            </td>
+<td class="p-md">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-error-container/40 text-error border border-error/40 font-body-sm text-body-sm font-semibold">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+                                    12 - High Risk
+                                </span>
+</td>
+<td class="p-md text-right">
+<button class="text-primary font-button text-button hover:text-primary-fixed transition-colors">View Report</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low dark:bg-surface-container-low w-full mt-auto">
+<div class="flex flex-col md:flex-row justify-between items-center py-lg px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto gap-md">
+<span class="text-h3-desktop font-h3-desktop text-primary dark:text-primary-fixed">RecruitShield AI</span>
+<div class="flex flex-wrap justify-center gap-md">
+<a class="text-on-surface font-body-sm text-body-sm hover:text-secondary transition-colors" href="#">Privacy Policy</a>
+<a class="text-on-surface font-body-sm text-body-sm hover:text-secondary transition-colors" href="#">Terms of Service</a>
+<a class="text-on-surface font-body-sm text-body-sm hover:text-secondary transition-colors" href="#">Security Resources</a>
+<a class="text-on-surface font-body-sm text-body-sm hover:text-secondary transition-colors" href="#">Contact Support</a>
+</div>
+<span class="text-on-surface font-body-sm text-body-sm">© 2024 RecruitShield AI. All rights reserved.</span>
+</div>
+</footer>
+</body></html>

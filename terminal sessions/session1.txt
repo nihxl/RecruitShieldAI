@@ -1,0 +1,943 @@
+                                                                            
+frosty@gaystation:/var/home/frosty/Downloads/Kkadder$ cat > clean_datasets.py << 'EOF'
+"""
+RecruitShield AI - Dataset Cleaning & Feature Extraction Pipeline
+Combines fraud-labeled data with regional legitimate job postings into
+a single Job_Content + fraudulent corpus for BERT/RoBERTa fine-tuning.
+"""
+
+import pandas as pd
+import re
+import os
+
+# ── CONFIG ────────────────────────────────────────────────────────────
+INPUT_DIR = "."
+OUTPUT_DIR = "cleaned"          # cleaned outputs never touch the originals
+MIN_DESC_LENGTH = 50            # drop near-empty postings (chars, not tokens)
+
+# Pakistan dataset is excluded by default: ~52% of its JD field is
+# truncated at exactly 250 characters (confirmed on the sample), which
+# makes it unreliable for a text-heavy NLP pipeline regardless of the
+# regional-fit question. Flip this to True if you want it included anyway
+# (e.g. for a base-paper reproduction ablation).
+INCLUDE_PAKISTAN = False
+
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+
+# ── SHARED HELPERS ───────────────────────────────────────────────────
+def read_csv_robust(filename):
+    """Try utf-8 first, then common fallback encodings, before giving up
+    and replacing unreadable bytes. Scraped datasets are rarely clean utf-8."""
+    for enc in ["utf-8", "latin1", "cp1252"]:
+        try:
+            df = pd.read_csv(filename, low_memory=False, encoding=enc)
+            print(f"  Read {filename} with encoding={enc}")
+            return df
+        except UnicodeDecodeError:
+            continue
+    print(f"  Falling back to utf-8 with errors replaced for {filename}")
+    return pd.read_csv(filename, low_memory=False, encoding="utf-8", encoding_errors="replace")
+
+
+def clean_text(text):
+    """Strip HTML tags, URLs, emails, and collapse whitespace.
+    Job posting text (especially the fraud dataset) often carries raw
+    HTML fragments and boilerplate links that add noise, not signal."""
+    if pd.isna(text):
+        return ""
+    text = str(text)
+    text = re.sub(r"<[^>]+>", " ", text)                     # HTML tags
+    text = re.sub(r"http\S+|www\.\S+", " ", text)             # URLs
+    text = re.sub(r"\S+@\S+\.\S+", " ", text)                 # emails
+    text = re.sub(r"\s+", " ", text).strip()                  # whitespace
+    return text
+
+
+def merge_fields(df, fields):
+    """Concatenate several text columns into one Job_Content field,
+    skipping nulls so we don't inject the literal string 'nan' into text."""
+    def combine(row):
+        parts = [str(row[f]) for f in fields if f in row and pd.notna(row[f])]
+        return " ".join(parts)
+    return df.apply(combine, axis=1)
+
+
+# ── 1. FAKE JOB POSTINGS (fraud source — only the fraudulent rows) ────
+def clean_fake_job_postings():
+    print("\n[1/4] fake_job_postings.csv")
+    df = read_csv_robust(os.path.join(INPUT_DIR, "fake_job_postings.csv"))
+    print(f"  Original shape: {df.shape}")
+
+    # This is our ONLY source of confirmed fraud labels. We keep just the
+    # fraudulent rows here — the legitimate rows in this dataset would
+    # otherwise overlap/conflict with the regional legit sources below.
+    df = df[df["fraudulent"] == 1].copy()
+    print(f"  Fraudulent rows kept: {len(df)}")
+
+    df["Job_Content"] = merge_fields(
+        df, ["title", "company_profile", "description", "requirements", "benefits"]
+    )
+    df["Job_Content"] = df["Job_Content"].apply(clean_text)
+
+    df = df[df["Job_Content"].str.len() >= MIN_DESC_LENGTH]
+    df = df.drop_duplicates(subset=["Job_Content"])
+
+    out = df[["Job_Content"]].copy()
+    out["fraudulent"] = 1
+    out["source"] = "fake_job_postings"
+
+    out_path = os.path.join(OUTPUT_DIR, "fake_job_postings_cleaned.csv")
+    out.to_csv(out_path, index=False)
+    print(f"  Wrote {out_path}: {len(out)} rows")
+    return out
+
+
+# ── 2. INDIAN JOB MARKET 2025 (primary legitimate source) ─────────────
+def clean_indian_job_market():
+    print("\n[2/4] indian-job-market-dataset-2025.xlsx")
+    df = pd.read_excel(os.path.join(INPUT_DIR, "indian-job-market-dataset-2025.xlsx"))
+    print(f"  Original shape: {df.shape}")
+
+    # Drop rows with no description at all - no text, no training signal
+    df = df.dropna(subset=["jobDescription"])
+
+    # De-duplicate on title+description - the sample showed ~7.5% dupes,
+    # likely the same posting re-scraped across multiple days
+    df = df.drop_duplicates(subset=["title", "jobDescription"])
+
+    df["Job_Content"] = merge_fields(df, ["title", "jobDescription", "tagsAndSkills"])
+    df["Job_Content"] = df["Job_Content"].apply(clean_text)
+
+    # This dataset's descriptions run much shorter than the fraud dataset's
+    # (median ~291 vs ~1010 chars). Without a floor, the model risks
+    # learning "short text = legit" as a shortcut instead of real fraud
+    # language patterns, so we filter out near-empty postings.
+    df = df[df["Job_Content"].str.len() >= MIN_DESC_LENGTH]
+
+    out = df[["Job_Content"]].copy()
+    out["fraudulent"] = 0
+    out["source"] = "indian_job_market_2025"
+
+    out_path = os.path.join(OUTPUT_DIR, "indian_job_market_cleaned.csv")
+    out.to_csv(out_path, index=False)
+    print(f"  Wrote {out_path}: {len(out)} rows")
+    return out
+
+
+# ── 3. LINKEDIN JOBS INDIA (supplementary legitimate source) ──────────
+def clean_linkedin_india():
+    print("\n[3/4] LinkedIn_Jobs_Data_India.csv")
+    df = read_csv_robust(os.path.join(INPUT_DIR, "LinkedIn_Jobs_Data_India.csv"))
+    print(f"  Original shape: {df.shape}")
+
+    df = df.dropna(subset=["description"])
+    df = df.drop_duplicates(subset=["title", "description"])
+
+    df["Job_Content"] = merge_fields(df, ["title", "description"])
+    df["Job_Content"] = df["Job_Content"].apply(clean_text)
+    df = df[df["Job_Content"].str.len() >= MIN_DESC_LENGTH]
+
+    out = df[["Job_Content"]].copy()
+    out["fraudulent"] = 0
+    out["source"] = "linkedin_india"
+
+    out_path = os.path.join(OUTPUT_DIR, "linkedin_india_cleaned.csv")
+    out.to_csv(out_path, index=False)
+    print(f"  Wrote {out_path}: {len(out)} rows")
+    return out
+
+
+# ── 4. JOB POSTING (global dataset, filtered to India-only rows) ──────
+def clean_job_posting_india():
+    print("\n[4/4] Job Posting.csv (India subset)")
+    df = read_csv_robust(os.path.join(INPUT_DIR, "Job Posting.csv"))
+    print(f"  Original shape: {df.shape}")
+
+    # This dataset is global (India, Germany, Brazil, Poland, US, etc).
+    # We filter to genuine India rows only - excluding "Indiana, United
+    # States", which false-matches a plain "contains India" filter.
+    india_mask = (
+        df["Location"].str.contains("India", case=False, na=False)
+        & ~df["Location"].str.contains("Indiana", case=False, na=False)
+    )
+    df = df[india_mask]
+    print(f"  India rows: {len(df)}")
+
+    # Restrict to English-language postings to avoid mixing in
+    # non-English text from the wider global dataset
+    df = df[df["Job Language"] == "en"]
+
+    df = df.dropna(subset=["Description"])
+    df = df.drop_duplicates(subset=["Job Opening Title", "Description"])
+
+    df["Job_Content"] = merge_fields(df, ["Job Opening Title", "Description"])
+    df["Job_Content"] = df["Job_Content"].apply(clean_text)
+    df = df[df["Job_Content"].str.len() >= MIN_DESC_LENGTH]
+
+    out = df[["Job_Content"]].copy()
+    out["fraudulent"] = 0
+    out["source"] = "job_posting_india_subset"
+
+    out_path = os.path.join(OUTPUT_DIR, "job_posting_india_cleaned.csv")
+    out.to_csv(out_path, index=False)
+    print(f"  Wrote {out_path}: {len(out)} rows")
+    return out
+
+
+# ── 5. OPTIONAL: PAKISTAN DATASET (excluded by default, see CONFIG) ───
+def clean_pakistan():
+    print("\n[optional] Pakistan Available Job Dec 19 - Mar-21.csv")
+    df = read_csv_robust(os.path.join(INPUT_DIR, "Pakistan Available Job Dec 19 - Mar-21.csv"))
+    print(f"  Original shape: {df.shape}")
+
+    df = df.dropna(subset=["JD"])
+    df = df.drop_duplicates(subset=["Job Name", "JD"])
+
+    df["Job_Content"] = merge_fields(df, ["Job Name", "JD"])
+    df["Job_Content"] = df["Job_Content"].apply(clean_text)
+    df = df[df["Job_Content"].str.len() >= MIN_DESC_LENGTH]
+
+    out = df[["Job_Content"]].copy()
+    out["fraudulent"] = 0
+    out["source"] = "pakistan_jobs"
+
+    out_path = os.path.join(OUTPUT_DIR, "pakistan_cleaned.csv")
+    out.to_csv(out_path, index=False)
+    print(f"  Wrote {out_path}: {len(out)} rows")
+    return out
+
+
+# ── MAIN: RUN PIPELINE AND ASSEMBLE FINAL COMBINED CORPUS ─────────────
+if __name__ == "__main__":
+    pieces = [
+        clean_fake_job_postings(),
+        clean_indian_job_market(),
+        clean_linkedin_india(),
+        clean_job_posting_india(),
+    ]
+
+    if INCLUDE_PAKISTAN:
+        pieces.append(clean_pakistan())
+
+    combined = pd.concat(pieces, ignore_index=True)
+
+    # Final safety net: drop any duplicate Job_Content that slipped through
+    # across different source datasets (e.g. same posting scraped twice
+    # by two different data collectors)
+    before = len(combined)
+    combined = combined.drop_duplicates(subset=["Job_Content"])
+    print(f"\nCross-source duplicates removed: {before - len(combined)}")
+
+    combined_path = os.path.join(OUTPUT_DIR, "final_combined_dataset.csv")
+    combined.to_csv(combined_path, index=False)
+
+    print(f"\n{'='*60}")
+    print(f"FINAL DATASET: {combined_path}")
+    print(f"Total rows: {len(combined)}")
+    print(f"Class balance:\n{combined['fraudulent'].value_counts()}")
+    print(f"Source breakdown:\n{combined['source'].value_counts()}")
+    print(f"{'='*60}")
+EOF
+frosty@gaystation:/var/home/frosty/Downloads/Kkadder$ ls
+ clean_datasets.py                     LinkedIn_Jobs_Data_India.csv                                                   samples
+ fake_job_postings.csv                 marketing_sample_for_trulia_com-real_estate__20190901_20191031__30k_data.csv   zips
+ indian-job-market-dataset-2025.xlsx  'Pakistan Available Job Dec 19 - Mar-21.csv'
+'Job Posting.csv'                      sample_all.py
+frosty@gaystation:/var/home/frosty/Downloads/Kkadder$ pip install pandas openpyxl --break-system-packages    # if not already installed
+python3 clean_datasets.py
+ls -lh cleaned/
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: pandas in /home/frosty/.local/lib/python3.14/site-packages (3.0.5)
+Requirement already satisfied: openpyxl in /home/frosty/.local/lib/python3.14/site-packages (3.1.5)
+Requirement already satisfied: numpy>=2.3.3 in /usr/lib64/python3.14/site-packages (from pandas) (2.3.5)
+Requirement already satisfied: python-dateutil>=2.8.2 in /usr/lib/python3.14/site-packages (from pandas) (2.9.0.post0)
+Requirement already satisfied: et-xmlfile in /home/frosty/.local/lib/python3.14/site-packages (from openpyxl) (2.0.0)
+Requirement already satisfied: six>=1.5 in /usr/lib/python3.14/site-packages (from python-dateutil>=2.8.2->pandas) (1.17.0)
+
+[1/4] fake_job_postings.csv
+  Read ./fake_job_postings.csv with encoding=utf-8
+  Original shape: (17880, 18)
+  Fraudulent rows kept: 866
+  Wrote cleaned/fake_job_postings_cleaned.csv: 709 rows
+
+[2/4] indian-job-market-dataset-2025.xlsx
+  Original shape: (97929, 17)
+  Wrote cleaned/indian_job_market_cleaned.csv: 85922 rows
+
+[3/4] LinkedIn_Jobs_Data_India.csv
+  Read ./LinkedIn_Jobs_Data_India.csv with encoding=utf-8
+  Original shape: (949, 16)
+  Wrote cleaned/linkedin_india_cleaned.csv: 884 rows
+
+[4/4] Job Posting.csv (India subset)
+  Read ./Job Posting.csv with encoding=latin1
+  Original shape: (9919, 21)
+  India rows: 1468
+  Wrote cleaned/job_posting_india_cleaned.csv: 1211 rows
+
+Cross-source duplicates removed: 110
+
+============================================================
+FINAL DATASET: cleaned/final_combined_dataset.csv
+Total rows: 88616
+Class balance:
+fraudulent
+0    87907
+1      709
+Name: count, dtype: int64
+Source breakdown:
+source
+indian_job_market_2025      85815
+job_posting_india_subset     1210
+linkedin_india                882
+fake_job_postings             709
+Name: count, dtype: int64
+============================================================
+total 129M
+-rw-r--r--. 1 frosty frosty 1.6M Aug 14 04:19 fake_job_postings_cleaned.csv
+-rw-r--r--. 1 frosty frosty  65M Aug 14 04:19 final_combined_dataset.csv
+-rw-r--r--. 1 frosty frosty  58M Aug 14 04:19 indian_job_market_cleaned.csv
+-rw-r--r--. 1 frosty frosty 3.2M Aug 14 04:19 job_posting_india_cleaned.csv
+-rw-r--r--. 1 frosty frosty 2.2M Aug 14 04:19 linkedin_india_cleaned.csv
+frosty@gaystation:/var/home/frosty/Downloads/Kkadder$ python3 -c "
+import pandas as pd
+df = pd.read_csv('cleaned/final_combined_dataset.csv')
+print(df['fraudulent'].value_counts())
+print(df['source'].value_counts())
+print(df['Job_Content'].str.len().describe())
+"
+fraudulent
+0    87907
+1      709
+Name: count, dtype: int64
+source
+indian_job_market_2025      85815
+job_posting_india_subset     1210
+linkedin_india                882
+fake_job_postings             709
+Name: count, dtype: int64
+count    88616.000000
+mean       729.555227
+std        967.481682
+min         50.000000
+25%        323.000000
+50%        418.000000
+75%        511.000000
+max      18460.000000
+Name: Job_Content, dtype: float64
+frosty@gaystation:/var/home/frosty/Downloads/Kkadder$ pip install scikit-learn transformers torch --break-system-packages    # if not already installed
+python3 prepare_for_training.py
+ls -lh dataset_splits/
+Defaulting to user installation because normal site-packages is not writeable
+Collecting scikit-learn
+  Downloading scikit_learn-1.9.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (11 kB)
+Collecting transformers
+  Downloading transformers-5.15.0-py3-none-any.whl.metadata (32 kB)
+Collecting torch
+  Downloading torch-2.13.0-cp314-cp314-manylinux_2_28_x86_64.whl.metadata (38 kB)
+Requirement already satisfied: numpy>=1.24.1 in /usr/lib64/python3.14/site-packages (from scikit-learn) (2.3.5)
+Collecting scipy>=1.10.0 (from scikit-learn)
+  Downloading scipy-1.18.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (62 kB)
+Collecting joblib>=1.4.0 (from scikit-learn)
+  Downloading joblib-1.5.3-py3-none-any.whl.metadata (5.5 kB)
+Collecting narwhals>=2.0.1 (from scikit-learn)
+  Downloading narwhals-2.24.0-py3-none-any.whl.metadata (15 kB)
+Collecting threadpoolctl>=3.5.0 (from scikit-learn)
+  Downloading threadpoolctl-3.6.0-py3-none-any.whl.metadata (13 kB)
+Collecting huggingface-hub<2.0,>=1.5.0 (from transformers)
+  Downloading huggingface_hub-1.27.0-py3-none-any.whl.metadata (16 kB)
+Requirement already satisfied: packaging>=20.0 in /usr/lib/python3.14/site-packages (from transformers) (25.0)
+Requirement already satisfied: pyyaml>=5.1 in /usr/lib64/python3.14/site-packages (from transformers) (6.0.2)
+Requirement already satisfied: regex>=2025.10.22 in /usr/lib64/python3.14/site-packages (from transformers) (2026.2.28)
+Collecting tokenizers<=0.23.0,>=0.22.0 (from transformers)
+  Downloading tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.3 kB)
+Collecting typer (from transformers)
+  Downloading typer-0.27.1-py3-none-any.whl.metadata (16 kB)
+Collecting safetensors>=0.8.0 (from transformers)
+  Downloading safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.2 kB)
+Requirement already satisfied: tqdm>=4.60 in /usr/local/lib/python3.14/site-packages (from transformers) (4.70.0)
+Collecting click<9.0.0,>=8.4.2 (from huggingface-hub<2.0,>=1.5.0->transformers)
+  Downloading click-8.4.2-py3-none-any.whl.metadata (2.6 kB)
+Requirement already satisfied: filelock>=3.10.0 in /usr/lib/python3.14/site-packages (from huggingface-hub<2.0,>=1.5.0->transformers) (3.15.4)
+Collecting fsspec>=2023.5.0 (from huggingface-hub<2.0,>=1.5.0->transformers)
+  Downloading fsspec-2026.7.0-py3-none-any.whl.metadata (10 kB)
+Collecting hf-xet<2.0.0,>=1.5.2 (from huggingface-hub<2.0,>=1.5.0->transformers)
+  Downloading hf_xet-1.6.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+Requirement already satisfied: httpx<1,>=0.23.0 in /usr/lib/python3.14/site-packages (from huggingface-hub<2.0,>=1.5.0->transformers) (0.28.1)
+Requirement already satisfied: typing-extensions>=4.1.0 in /usr/lib/python3.14/site-packages (from huggingface-hub<2.0,>=1.5.0->transformers) (4.15.0)
+Requirement already satisfied: anyio in /usr/lib/python3.14/site-packages (from httpx<1,>=0.23.0->huggingface-hub<2.0,>=1.5.0->transformers) (4.12.1)
+Requirement already satisfied: certifi in /usr/lib/python3.14/site-packages (from httpx<1,>=0.23.0->huggingface-hub<2.0,>=1.5.0->transformers) (2025.7.9)
+Requirement already satisfied: httpcore==1.* in /usr/lib/python3.14/site-packages (from httpx<1,>=0.23.0->huggingface-hub<2.0,>=1.5.0->transformers) (1.0.9)
+Requirement already satisfied: idna in /usr/lib/python3.14/site-packages (from httpx<1,>=0.23.0->huggingface-hub<2.0,>=1.5.0->transformers) (3.10)
+Requirement already satisfied: h11>=0.16 in /usr/lib/python3.14/site-packages (from httpcore==1.*->httpx<1,>=0.23.0->huggingface-hub<2.0,>=1.5.0->transformers) (0.16.0)
+Requirement already satisfied: setuptools>=77.0.3 in /usr/lib/python3.14/site-packages (from torch) (78.1.1)
+Collecting sympy>=1.13.3 (from torch)
+  Downloading sympy-1.14.0-py3-none-any.whl.metadata (12 kB)
+Collecting networkx>=2.5.1 (from torch)
+  Downloading networkx-3.6.1-py3-none-any.whl.metadata (6.8 kB)
+Collecting jinja2 (from torch)
+  Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting cuda-toolkit==13.0.3 (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch)
+  Downloading cuda_toolkit-13.0.3.0-py2.py3-none-any.whl.metadata (17 kB)
+Collecting cuda-bindings<14,>=13.0.3 (from torch)
+  Downloading cuda_bindings-13.3.1-cp314-cp314-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (2.5 kB)
+Collecting nvidia-cudnn-cu13==9.20.0.48 (from torch)
+  Downloading nvidia_cudnn_cu13-9.20.0.48-py3-none-manylinux_2_27_x86_64.whl.metadata (1.9 kB)
+Collecting nvidia-cusparselt-cu13==0.8.1 (from torch)
+  Downloading nvidia_cusparselt_cu13-0.8.1-py3-none-manylinux2014_x86_64.whl.metadata (12 kB)
+Collecting nvidia-nccl-cu13==2.29.7 (from torch)
+  Downloading nvidia_nccl_cu13-2.29.7-py3-none-manylinux_2_18_x86_64.whl.metadata (2.1 kB)
+Collecting nvidia-nvshmem-cu13==3.4.5 (from torch)
+  Downloading nvidia_nvshmem_cu13-3.4.5-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.1 kB)
+Collecting triton==3.7.1 (from torch)
+  Downloading triton-3.7.1-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cublas==13.1.1.3.* (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch)
+  Downloading nvidia_cublas-13.1.1.3-py3-none-manylinux_2_27_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-cuda-nvrtc==13.0.88.* (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch)
+  Downloading nvidia_cuda_nvrtc-13.0.88-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cuda-runtime==13.0.96.* (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch)
+  Downloading nvidia_cuda_runtime-13.0.96-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cufft==12.0.0.61.* (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch)
+  Downloading nvidia_cufft-12.0.0.61-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-nvjitlink<14,>=13.0.88 (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch)
+  Downloading nvidia_nvjitlink-13.3.33-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-cufile==1.15.1.6.* (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch)
+  Downloading nvidia_cufile-1.15.1.6-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cuda-cupti==13.0.85.* (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch)
+  Downloading nvidia_cuda_cupti-13.0.85-py3-none-manylinux_2_25_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-curand==10.4.0.35.* (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch)
+  Downloading nvidia_curand-10.4.0.35-py3-none-manylinux_2_27_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cusolver==12.0.4.66.* (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch)
+  Downloading nvidia_cusolver-12.0.4.66-py3-none-manylinux_2_27_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-cusparse==12.6.3.3.* (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch)
+  Downloading nvidia_cusparse-12.6.3.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-nvtx==13.0.85.* (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.3; platform_system == "Linux"->torch)
+  Downloading nvidia_nvtx-13.0.85-py3-none-manylinux1_x86_64.manylinux_2_5_x86_64.whl.metadata (1.8 kB)
+Collecting cuda-pathfinder>=1.4.2 (from cuda-bindings<14,>=13.0.3->torch)
+  Downloading cuda_pathfinder-1.6.0-py3-none-any.whl.metadata (1.9 kB)
+Collecting mpmath<1.4,>=1.1.0 (from sympy>=1.13.3->torch)
+  Downloading mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+Collecting MarkupSafe>=2.0 (from jinja2->torch)
+  Downloading markupsafe-3.0.3-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+Collecting shellingham>=1.3.0 (from typer->transformers)
+  Downloading shellingham-1.5.4-py2.py3-none-any.whl.metadata (3.5 kB)
+Requirement already satisfied: rich>=13.8.0 in /usr/lib/python3.14/site-packages (from typer->transformers) (14.1.0)
+Collecting annotated-doc>=0.0.2 (from typer->transformers)
+  Downloading annotated_doc-0.0.5-py3-none-any.whl.metadata (6.5 kB)
+Requirement already satisfied: markdown-it-py>=2.2.0 in /usr/lib/python3.14/site-packages (from rich>=13.8.0->typer->transformers) (3.0.0)
+Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /usr/lib/python3.14/site-packages (from rich>=13.8.0->typer->transformers) (2.19.1)
+Requirement already satisfied: mdurl~=0.1 in /usr/lib/python3.14/site-packages (from markdown-it-py>=2.2.0->rich>=13.8.0->typer->transformers) (0.1.2)
+Downloading scikit_learn-1.9.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (9.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.1/9.1 MB 5.7 MB/s eta 0:00:00
+Downloading transformers-5.15.0-py3-none-any.whl (11.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.7/11.7 MB 2.7 MB/s eta 0:00:00
+Downloading huggingface_hub-1.27.0-py3-none-any.whl (784 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 784.9/784.9 kB 3.2 MB/s eta 0:00:00
+Downloading click-8.4.2-py3-none-any.whl (119 kB)
+Downloading hf_xet-1.6.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 3.4 MB/s eta 0:00:00
+Downloading tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 3.9 MB/s eta 0:00:00
+Downloading torch-2.13.0-cp314-cp314-manylinux_2_28_x86_64.whl (526.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 526.6/526.6 MB 3.1 MB/s eta 0:00:00
+Downloading cuda_toolkit-13.0.3.0-py2.py3-none-any.whl (2.5 kB)
+Downloading nvidia_cudnn_cu13-9.20.0.48-py3-none-manylinux_2_27_x86_64.whl (366.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 366.2/366.2 MB 3.5 MB/s eta 0:00:00
+Downloading nvidia_cusparselt_cu13-0.8.1-py3-none-manylinux2014_x86_64.whl (170.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 170.1/170.1 MB 3.5 MB/s eta 0:00:00
+Downloading nvidia_nccl_cu13-2.29.7-py3-none-manylinux_2_18_x86_64.whl (206.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 206.0/206.0 MB 3.5 MB/s eta 0:00:00
+Downloading nvidia_nvshmem_cu13-3.4.5-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (60.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 60.4/60.4 MB 3.6 MB/s eta 0:00:00
+Downloading triton-3.7.1-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (197.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 197.7/197.7 MB 3.0 MB/s eta 0:00:00
+Downloading cuda_bindings-13.3.1-cp314-cp314-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (6.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.5/6.5 MB 2.0 MB/s eta 0:00:00
+Downloading nvidia_cublas-13.1.1.3-py3-none-manylinux_2_27_x86_64.whl (423.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 423.1/423.1 MB 3.4 MB/s eta 0:00:00
+Downloading nvidia_cuda_cupti-13.0.85-py3-none-manylinux_2_25_x86_64.whl (10.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.7/10.7 MB 3.7 MB/s eta 0:00:00
+Downloading nvidia_cuda_nvrtc-13.0.88-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (90.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 90.2/90.2 MB 3.5 MB/s eta 0:00:00
+Downloading nvidia_cuda_runtime-13.0.96-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (2.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.2/2.2 MB 2.3 MB/s eta 0:00:00
+Downloading nvidia_cufft-12.0.0.61-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (214.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 214.1/214.1 MB 3.4 MB/s eta 0:00:00
+Downloading nvidia_cufile-1.15.1.6-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 3.9 MB/s eta 0:00:00
+Downloading nvidia_curand-10.4.0.35-py3-none-manylinux_2_27_x86_64.whl (59.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 59.5/59.5 MB 3.6 MB/s eta 0:00:00
+Downloading nvidia_cusolver-12.0.4.66-py3-none-manylinux_2_27_x86_64.whl (200.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 200.9/200.9 MB 3.5 MB/s eta 0:00:00
+Downloading nvidia_cusparse-12.6.3.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (145.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 145.9/145.9 MB 3.4 MB/s eta 0:00:00
+Downloading nvidia_nvjitlink-13.3.33-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (40.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 40.7/40.7 MB 3.5 MB/s eta 0:00:00
+Downloading nvidia_nvtx-13.0.85-py3-none-manylinux1_x86_64.manylinux_2_5_x86_64.whl (148 kB)
+Downloading cuda_pathfinder-1.6.0-py3-none-any.whl (54 kB)
+Downloading fsspec-2026.7.0-py3-none-any.whl (206 kB)
+Downloading joblib-1.5.3-py3-none-any.whl (309 kB)
+Downloading narwhals-2.24.0-py3-none-any.whl (461 kB)
+Downloading networkx-3.6.1-py3-none-any.whl (2.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 4.3 MB/s eta 0:00:00
+Downloading safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (516 kB)
+Downloading scipy-1.18.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (35.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 35.3/35.3 MB 3.5 MB/s eta 0:00:00
+Downloading sympy-1.14.0-py3-none-any.whl (6.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 4.4 MB/s eta 0:00:00
+Downloading mpmath-1.3.0-py3-none-any.whl (536 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 536.2/536.2 kB 3.9 MB/s eta 0:00:00
+Downloading threadpoolctl-3.6.0-py3-none-any.whl (18 kB)
+Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+Downloading markupsafe-3.0.3-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (23 kB)
+Downloading typer-0.27.1-py3-none-any.whl (122 kB)
+Downloading annotated_doc-0.0.5-py3-none-any.whl (5.3 kB)
+Downloading shellingham-1.5.4-py2.py3-none-any.whl (9.8 kB)
+Installing collected packages: nvidia-cusparselt-cu13, mpmath, cuda-toolkit, triton, threadpoolctl, sympy, shellingham, scipy, safetensors, nvidia-nvtx, nvidia-nvshmem-cu13, nvidia-nvjitlink, nvidia-nccl-cu13, nvidia-curand, nvidia-cufile, nvidia-cuda-runtime, nvidia-cuda-nvrtc, nvidia-cuda-cupti, networkx, narwhals, MarkupSafe, joblib, hf-xet, fsspec, cuda-pathfinder, click, annotated-doc, scikit-learn, nvidia-cusparse, nvidia-cufft, nvidia-cublas, jinja2, cuda-bindings, typer, nvidia-cusolver, nvidia-cudnn-cu13, huggingface-hub, tokenizers, transformers, torch
+Successfully installed MarkupSafe-3.0.3 annotated-doc-0.0.5 click-8.4.2 cuda-bindings-13.3.1 cuda-pathfinder-1.6.0 cuda-toolkit-13.0.3.0 fsspec-2026.7.0 hf-xet-1.6.0 huggingface-hub-1.27.0 jinja2-3.1.6 joblib-1.5.3 mpmath-1.3.0 narwhals-2.24.0 networkx-3.6.1 nvidia-cublas-13.1.1.3 nvidia-cuda-cupti-13.0.85 nvidia-cuda-nvrtc-13.0.88 nvidia-cuda-runtime-13.0.96 nvidia-cudnn-cu13-9.20.0.48 nvidia-cufft-12.0.0.61 nvidia-cufile-1.15.1.6 nvidia-curand-10.4.0.35 nvidia-cusolver-12.0.4.66 nvidia-cusparse-12.6.3.3 nvidia-cusparselt-cu13-0.8.1 nvidia-nccl-cu13-2.29.7 nvidia-nvjitlink-13.3.33 nvidia-nvshmem-cu13-3.4.5 nvidia-nvtx-13.0.85 safetensors-0.8.0 scikit-learn-1.9.0 scipy-1.18.0 shellingham-1.5.4 sympy-1.14.0 threadpoolctl-3.6.0 tokenizers-0.22.2 torch-2.13.0 transformers-5.15.0 triton-3.7.1 typer-0.27.1
+============================================================
+SANITY CHECK
+============================================================
+Total rows: 88616
+
+Class balance (fraudulent):
+fraudulent
+0    87907
+1      709
+Name: count, dtype: int64
+
+Class balance (%):
+fraudulent
+0    99.2
+1     0.8
+Name: proportion, dtype: float64
+
+Source breakdown:
+source
+indian_job_market_2025      85815
+job_posting_india_subset     1210
+linkedin_india                882
+fake_job_postings             709
+Name: count, dtype: int64
+
+Job_Content char length stats:
+count    88616.000000
+mean       729.555227
+std        967.481682
+min         50.000000
+25%        323.000000
+50%        418.000000
+75%        511.000000
+max      18460.000000
+Name: Job_Content, dtype: float64
+============================================================
+
+Train: 62031 rows | fraud rate: 0.008
+Val:   13292 rows | fraud rate: 0.008
+Test:  13293 rows | fraud rate: 0.008
+
+Loading tokenizer: roberta-base
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+config.json: 100%|██████████████████████████████████████████████████████████████████████████| 481/481 [00:00<00:00, 2.42MB/s]
+tokenizer_config.json: 100%|██████████████████████████████████████████████████████████████| 25.0/25.0 [00:00<00:00, 87.5kB/s]
+vocab.json: 100%|█████████████████████████████████████████████████████████████████████████| 899k/899k [00:00<00:00, 2.45MB/s]
+merges.txt: 100%|██████████████████████████████████████████████████████████████████████████| 456k/456k [00:00<00:00, 944kB/s]
+tokenizer.json: 100%|███████████████████████████████████████████████████████████████████| 1.36M/1.36M [00:00<00:00, 1.76MB/s]
+[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (565 > 512). frosty@gaystation:/var/home/frosty/Downloads/Kkadder$ cat > clean_datasets.py << 'EOF'
+"""
+RecruitShield AI - Dataset Cleaning & Feature Extraction Pipeline
+Combines fraud-labeled data with regional legitimate job postings into
+a single Job_Content + fraudulent corpus for BERT/RoBERTa fine-tuning.
+"""
+
+import pandas as pd
+import re
+import os
+
+# ── CONFIG ────────────────────────────────────────────────────────────
+INPUT_DIR = "."
+OUTPUT_DIR = "cleaned"          # cleaned outputs never touch the originals
+MIN_DESC_LENGTH = 50            # drop near-empty postings (chars, not tokens)
+
+# Pakistan dataset is excluded by default: ~52% of its JD field is
+# truncated at exactly 250 characters (confirmed on the sample), which
+# makes it unreliable for a text-heavy NLP pipeline regardless of the
+# regional-fit question. Flip this to True if you want it included anyway
+# (e.g. for a base-paper reproduction ablation).
+INCLUDE_PAKISTAN = False
+
+# Target fraud rate for the final combined corpus. The full-size legit
+# sources (especially indian_job_market_2025) massively outnumber the
+# fraud examples once merged at full scale - a first run came out at
+# 0.8% fraud (709 fraud vs 87,907 legit), which would need ~124x SMOTE
+# oversampling to balance. SMOTE-family methods degrade past roughly
+# 15-20x oversampling, so we downsample the legit class here instead,
+# targeting a ratio closer to the base paper's own ~6% fraud rate.
+TARGET_FRAUD_RATE = 0.06
+RANDOM_STATE = 42
+
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+
+# ── SHARED HELPERS ───────────────────────────────────────────────────
+def read_csv_robust(filename):
+    """Try utf-8 first, then common fallback encodings, before giving up
+    and replacing unreadable bytes. Scraped datasets are rarely clean utf-8."""
+    for enc in ["utf-8", "latin1", "cp1252"]:
+        try:
+            df = pd.read_csv(filename, low_memory=False, encoding=enc)
+            print(f"  Read {filename} with encoding={enc}")
+            return df
+        except UnicodeDecodeError:
+            continue
+    print(f"  Falling back to utf-8 with errors replaced for {filename}")
+    return pd.read_csv(filename, low_memory=False, encoding="utf-8", encoding_errors="replace")
+
+
+def clean_text(text):
+    """Strip HTML tags, URLs, emails, and collapse whitespace.
+    Job posting text (especially the fraud dataset) often carries raw
+    HTML fragments and boilerplate links that add noise, not signal."""
+    if pd.isna(text):
+        return ""
+    text = str(text)
+    text = re.sub(r"<[^>]+>", " ", text)                     # HTML tags
+    text = re.sub(r"http\S+|www\.\S+", " ", text)             # URLs
+    text = re.sub(r"\S+@\S+\.\S+", " ", text)                 # emails
+    text = re.sub(r"\s+", " ", text).strip()                  # whitespace
+    return text
+
+
+def merge_fields(df, fields):
+    """Concatenate several text columns into one Job_Content field,
+    skipping nulls so we don't inject the literal string 'nan' into text."""
+    def combine(row):
+        parts = [str(row[f]) for f in fields if f in row and pd.notna(row[f])]
+        return " ".join(parts)
+    return df.apply(combine, axis=1)
+
+
+# ── 1. FAKE JOB POSTINGS (fraud source — only the fraudulent rows) ────
+def clean_fake_job_postings():
+    print("\n[1/4] fake_job_postings.csv")
+    df = read_csv_robust(os.path.join(INPUT_DIR, "fake_job_postings.csv"))
+    print(f"  Original shape: {df.shape}")
+
+    # This is our ONLY source of confirmed fraud labels. We keep just the
+    # fraudulent rows here — the legitimate rows in this dataset would
+    # otherwise overlap/conflict with the regional legit sources below.
+    df = df[df["fraudulent"] == 1].copy()
+    print(f"  Fraudulent rows kept: {len(df)}")
+
+    df["Job_Content"] = merge_fields(
+        df, ["title", "company_profile", "description", "requirements", "benefits"]
+    )
+    df["Job_Content"] = df["Job_Content"].apply(clean_text)
+
+    df = df[df["Job_Content"].str.len() >= MIN_DESC_LENGTH]
+    df = df.drop_duplicates(subset=["Job_Content"])
+
+    out = df[["Job_Content"]].copy()
+    out["fraudulent"] = 1
+    out["source"] = "fake_job_postings"
+
+    out_path = os.path.join(OUTPUT_DIR, "fake_job_postings_cleaned.csv")
+    out.to_csv(out_path, index=False)
+    print(f"  Wrote {out_path}: {len(out)} rows")
+    return out
+
+
+# ── 2. INDIAN JOB MARKET 2025 (primary legitimate source) ─────────────
+def clean_indian_job_market():
+    print("\n[2/4] indian-job-market-dataset-2025.xlsx")
+    df = pd.read_excel(os.path.join(INPUT_DIR, "indian-job-market-dataset-2025.xlsx"))
+    print(f"  Original shape: {df.shape}")
+
+    # Drop rows with no description at all - no text, no training signal
+    df = df.dropna(subset=["jobDescription"])
+
+    # De-duplicate on title+description - the sample showed ~7.5% dupes,
+    # likely the same posting re-scraped across multiple days
+    df = df.drop_duplicates(subset=["title", "jobDescription"])
+
+    df["Job_Content"] = merge_fields(df, ["title", "jobDescription", "tagsAndSkills"])
+    df["Job_Content"] = df["Job_Content"].apply(clean_text)
+
+    # This dataset's descriptions run much shorter than the fraud dataset's
+    # (median ~291 vs ~1010 chars). Without a floor, the model risks
+    # learning "short text = legit" as a shortcut instead of real fraud
+    # language patterns, so we filter out near-empty postings.
+    df = df[df["Job_Content"].str.len() >= MIN_DESC_LENGTH]
+
+    out = df[["Job_Content"]].copy()
+    out["fraudulent"] = 0
+    out["source"] = "indian_job_market_2025"
+
+    out_path = os.path.join(OUTPUT_DIR, "indian_job_market_cleaned.csv")
+    out.to_csv(out_path, index=False)
+    print(f"  Wrote {out_path}: {len(out)} rows")
+    return out
+
+
+# ── 3. LINKEDIN JOBS INDIA (supplementary legitimate source) ──────────
+def clean_linkedin_india():
+    print("\n[3/4] LinkedIn_Jobs_Data_India.csv")
+    df = read_csv_robust(os.path.join(INPUT_DIR, "LinkedIn_Jobs_Data_India.csv"))
+    print(f"  Original shape: {df.shape}")
+
+    df = df.dropna(subset=["description"])
+    df = df.drop_duplicates(subset=["title", "description"])
+
+    df["Job_Content"] = merge_fields(df, ["title", "description"])
+    df["Job_Content"] = df["Job_Content"].apply(clean_text)
+    df = df[df["Job_Content"].str.len() >= MIN_DESC_LENGTH]
+
+    out = df[["Job_Content"]].copy()
+    out["fraudulent"] = 0
+    out["source"] = "linkedin_india"
+
+    out_path = os.path.join(OUTPUT_DIR, "linkedin_india_cleaned.csv")
+    out.to_csv(out_path, index=False)
+    print(f"  Wrote {out_path}: {len(out)} rows")
+    return out
+
+
+# ── 4. JOB POSTING (global dataset, filtered to India-only rows) ──────
+def clean_job_posting_india():
+    print("\n[4/4] Job Posting.csv (India subset)")
+    df = read_csv_robust(os.path.join(INPUT_DIR, "Job Posting.csv"))
+    print(f"  Original shape: {df.shape}")
+
+    # This dataset is global (India, Germany, Brazil, Poland, US, etc).
+    # We filter to genuine India rows only - excluding "Indiana, United
+    # States", which false-matches a plain "contains India" filter.
+    india_mask = (
+        df["Location"].str.contains("India", case=False, na=False)
+        & ~df["Location"].str.contains("Indiana", case=False, na=False)
+    )
+    df = df[india_mask]
+    print(f"  India rows: {len(df)}")
+
+    # Restrict to English-language postings to avoid mixing in
+    # non-English text from the wider global dataset
+    df = df[df["Job Language"] == "en"]
+
+    df = df.dropna(subset=["Description"])
+    df = df.drop_duplicates(subset=["Job Opening Title", "Description"])
+
+    df["Job_Content"] = merge_fields(df, ["Job Opening Title", "Description"])
+    df["Job_Content"] = df["Job_Content"].apply(clean_text)
+    df = df[df["Job_Content"].str.len() >= MIN_DESC_LENGTH]
+
+    out = df[["Job_Content"]].copy()
+    out["fraudulent"] = 0
+    out["source"] = "job_posting_india_subset"
+
+    out_path = os.path.join(OUTPUT_DIR, "job_posting_india_cleaned.csv")
+    out.to_csv(out_path, index=False)
+    print(f"  Wrote {out_path}: {len(out)} rows")
+    return out
+
+
+# ── 5. OPTIONAL: PAKISTAN DATASET (excluded by default, see CONFIG) ───
+def clean_pakistan():
+    print("\n[optional] Pakistan Available Job Dec 19 - Mar-21.csv")
+    df = read_csv_robust(os.path.join(INPUT_DIR, "Pakistan Available Job Dec 19 - Mar-21.csv"))
+    print(f"  Original shape: {df.shape}")
+
+    df = df.dropna(subset=["JD"])
+    df = df.drop_duplicates(subset=["Job Name", "JD"])
+
+    df["Job_Content"] = merge_fields(df, ["Job Name", "JD"])
+    df["Job_Content"] = df["Job_Content"].apply(clean_text)
+    df = df[df["Job_Content"].str.len() >= MIN_DESC_LENGTH]
+
+    out = df[["Job_Content"]].copy()
+    out["fraudulent"] = 0
+    out["source"] = "pakistan_jobs"
+
+    out_path = os.path.join(OUTPUT_DIR, "pakistan_cleaned.csv")
+    out.to_csv(out_path, index=False)
+    print(f"  Wrote {out_path}: {len(out)} rows")
+    return out
+
+
+# ── MAIN: RUN PIPELINE AND ASSEMBLE FINAL COMBINED CORPUS ─────────────
+if __name__ == "__main__":
+    pieces = [
+        clean_fake_job_postings(),
+        clean_indian_job_market(),
+        clean_linkedin_india(),
+        clean_job_posting_india(),
+    ]
+
+    if INCLUDE_PAKISTAN:
+        pieces.append(clean_pakistan())
+
+    combined = pd.concat(pieces, ignore_index=True)
+
+    # Final safety net: drop any duplicate Job_Content that slipped through
+    # across different source datasets (e.g. same posting scraped twice
+    # by two different data collectors)
+    before = len(combined)
+    combined = combined.drop_duplicates(subset=["Job_Content"])
+    print(f"\nCross-source duplicates removed: {before - len(combined)}")
+
+    print(f"\nPre-rebalance fraud rate: {combined['fraudulent'].mean():.4f}")
+    print(f"Pre-rebalance counts:\n{combined['fraudulent'].value_counts()}")
+
+    # ── REBALANCE: cap majority class so fraud rate stays workable ────
+    # At full volume, the legit sources (mainly indian_job_market_2025)
+    # dominate the corpus, pushing the fraud rate down to under 1%.
+    # SMOTE-family methods (including SMOBD/G-SMOTE) degrade badly past
+    # roughly 15-20x oversampling, so we downsample the legitimate class
+    # here rather than trying to synthetically oversample fraud examples
+    # 100x+ later. Target ratio matches the base paper's own ~6% fraud rate.
+    fraud_df = combined[combined["fraudulent"] == 1]
+    legit_df = combined[combined["fraudulent"] == 0]
+
+    target_legit_count = int(len(fraud_df) * (1 - TARGET_FRAUD_RATE) / TARGET_FRAUD_RATE)
+
+    if len(legit_df) > target_legit_count:
+        legit_df = legit_df.sample(n=target_legit_count, random_state=RANDOM_STATE)
+        print(f"\nDownsampled legit class to {len(legit_df)} rows "
+              f"(target fraud rate: {TARGET_FRAUD_RATE:.2%})")
+    else:
+        print(f"\nLegit class ({len(legit_df)} rows) already at or below target "
+              f"({target_legit_count}) - no downsampling needed")
+
+    # Shuffle after concatenation so rows aren't grouped by source,
+    # which matters once we do the train/val/test split downstream
+    combined = pd.concat([fraud_df, legit_df], ignore_index=True)
+    combined = combined.sample(frac=1, random_state=RANDOM_STATE).reset_index(drop=True)
+
+    combined_path = os.path.join(OUTPUT_DIR, "final_combined_dataset.csv")
+    combined.to_csv(combined_path, index=False)
+
+    print(f"\n{'='*60}")
+    print(f"FINAL DATASET: {combined_path}")
+    print(f"Total rows: {len(combined)}")
+    print(f"Final fraud rate: {combined['fraudulent'].mean():.4f}")
+    print(f"Class balance:\n{combined['fraudulent'].value_counts()}")
+    print(f"Source breakdown:\n{combined['source'].value_counts()}")
+    print(f"{'='*60}")
+EOF
+frosty@gaystation:/var/home/frosty/Downloads/Kkadder$ python3 clean_datasets.py
+
+[1/4] fake_job_postings.csv
+  Read ./fake_job_postings.csv with encoding=utf-8
+  Original shape: (17880, 18)
+  Fraudulent rows kept: 866
+  Wrote cleaned/fake_job_postings_cleaned.csv: 709 rows
+
+[2/4] indian-job-market-dataset-2025.xlsx
+  Original shape: (97929, 17)
+  Wrote cleaned/indian_job_market_cleaned.csv: 85922 rows
+
+[3/4] LinkedIn_Jobs_Data_India.csv
+  Read ./LinkedIn_Jobs_Data_India.csv with encoding=utf-8
+  Original shape: (949, 16)
+  Wrote cleaned/linkedin_india_cleaned.csv: 884 rows
+
+[4/4] Job Posting.csv (India subset)
+  Read ./Job Posting.csv with encoding=latin1
+  Original shape: (9919, 21)
+  India rows: 1468
+  Wrote cleaned/job_posting_india_cleaned.csv: 1211 rows
+
+Cross-source duplicates removed: 110
+
+Pre-rebalance fraud rate: 0.0080
+Pre-rebalance counts:
+fraudulent
+0    87907
+1      709
+Name: count, dtype: int64
+
+Downsampled legit class to 11107 rows (target fraud rate: 6.00%)
+
+============================================================
+FINAL DATASET: cleaned/final_combined_dataset.csv
+Total rows: 11816
+Final fraud rate: 0.0600
+Class balance:
+fraudulent
+0    11107
+1      709
+Name: count, dtype: int64
+Source breakdown:
+source
+indian_job_market_2025      10830
+fake_job_postings             709
+job_posting_india_subset      162
+linkedin_india                115
+Name: count, dtype: int64
+============================================================
+frosty@gaystation:/var/home/frosty/Downloads/Kkadder$ python3 prepare_for_training.py
+============================================================
+SANITY CHECK
+============================================================
+Total rows: 11816
+
+Class balance (fraudulent):
+fraudulent
+0    11107
+1      709
+Name: count, dtype: int64
+
+Class balance (%):
+fraudulent
+0    94.0
+1     6.0
+Name: proportion, dtype: float64
+
+Source breakdown:
+source
+indian_job_market_2025      10830
+fake_job_postings             709
+job_posting_india_subset      162
+linkedin_india                115
+Name: count, dtype: int64
+
+Job_Content char length stats:
+count    11816.000000
+mean       814.354012
+std       1075.472638
+min         51.000000
+25%        328.000000
+50%        430.000000
+75%        534.000000
+max      17045.000000
+Name: Job_Content, dtype: float64
+============================================================
+
+Train: 8271 rows | fraud rate: 0.060
+Val:   1772 rows | fraud rate: 0.060
+Test:  1773 rows | fraud rate: 0.060
+
+Loading tokenizer: roberta-base
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (793 > 512). Running this sequence through the model will result in indexing errors
+
+Token length distribution (sample):
+count    3000.000000
+mean      164.084333
+std       207.678428
+min        11.000000
+25%        71.000000
+50%        92.000000
+75%       120.000000
+max      3175.000000
+Name: Job_Content, dtype: float64
+
+95th percentile: 599 tokens
+99th percentile: 1031 tokens
+Suggested max_length: 512 (RoBERTa/BERT hard cap is 512)
+Rows exceeding suggested max_length: 5.0%
+
+============================================================
+DONE. Splits saved to dataset_splits/
+Use max_length=512 when tokenizing for fine-tuning
+============================================================
+frosty@gaystation:/var/home/frosty/Downloads/Kkadder$ 
