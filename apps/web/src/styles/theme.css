@@ -136,6 +136,12 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0.4; }
   }
+
+  /* Shield fallback pulse — used by ShieldFallback in ShieldShader.tsx */
+  @keyframes shield-pulse {
+    0%, 100% { opacity: 1;   transform: scale(1.0); }
+    50%       { opacity: 0.5; transform: scale(0.92); }
+  }
 }
 
 /* Placeholder Print Colors */

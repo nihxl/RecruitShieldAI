@@ -21,6 +21,7 @@ import { Skeleton, SkeletonText } from '@/components/Skeleton';
 import { EmptyBlock, ErrorBlock } from '@/components/FeedbackBlocks';
 import { SimulatedBadge, ComingSoonChip } from '@/components/StatusBadge';
 import { ProvenanceBlock } from '@/components/ProvenanceBlock';
+import { ShieldShader } from '@/components/ShieldShader';
 
 // ── Data table demo types ──────────────────────────────────────────────────────
 interface CheckRow {
@@ -63,7 +64,7 @@ const SandboxContent = () => {
     <div className="max-w-4xl mx-auto p-8 flex flex-col gap-16 bg-surface text-on-surface">
       <div>
         <h1 className="text-h1-desktop font-bold mb-2">Components Sandbox</h1>
-        <p className="text-body-md text-on-surface-variant">Task 2.5 additions in the middle; Task 2.6 additions at the bottom.</p>
+        <p className="text-body-md text-on-surface-variant">Task 2.5 additions in the middle; Task 2.6 additions at the bottom; Task 5.2 (ShieldShader) at the bottom.</p>
       </div>
 
       {/* ── Existing sections ──────────────────────────────────────────────── */}
@@ -574,6 +575,66 @@ const SandboxContent = () => {
                 disclaimer="RecruitShield AI gives a risk estimate, not a guarantee. Always verify an employer through official channels before sharing any personal documents, bank details, or making any payments. This tool is not a substitute for professional advice."
                 provenance={{ source: 'model', modelVersion: 'v2.1.0', generatedAt: '2026-10-04T08:00:00Z' }}
               />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Task 5.2: Shield shader ─────────────────────────────────────── */}
+      <section className="flex flex-col gap-8" id="shield-shader">
+        <h2 className="text-h2-desktop font-semibold border-b border-outline-variant pb-2">
+          Shield Shader (Task 5.2)
+        </h2>
+
+        {/* Happy path: WebGL canvas + icon overlay */}
+        <div>
+          <h3 className="text-h3-desktop mb-3">WebGL render</h3>
+          <p className="text-body-sm text-on-surface-variant mb-4">
+            120px circular well with surface-container background and the shader
+            inside a 96px inner square. A static filled shield icon is overlaid
+            at 32px (DD §6).
+          </p>
+          <div
+            className="w-[120px] h-[120px] rounded-full bg-surface-container flex items-center justify-center"
+            style={{ border: '1px solid color-mix(in srgb, var(--color-outline-variant) 30%, transparent)' }}
+          >
+            <ShieldShader />
+          </div>
+        </div>
+
+        {/* Static fallback: simulated by wrapping ShieldFallback directly */}
+        <div>
+          <h3 className="text-h3-desktop mb-3">Static fallback (no WebGL)</h3>
+          <p className="text-body-sm text-on-surface-variant mb-4">
+            Shown when WebGL is unavailable, or when the shader compile / link
+            fails. A filled shield icon pulses via CSS animation
+            (<code>shield-pulse</code> keyframe in theme.css).
+            Under <code>prefers-reduced-motion</code> the animation is suppressed
+            by the <code>motion-safe:</code> variant — the icon renders as static.
+          </p>
+          <div
+            className="w-[120px] h-[120px] rounded-full bg-surface-container flex items-center justify-center"
+            style={{ border: '1px solid color-mix(in srgb, var(--color-outline-variant) 30%, transparent)' }}
+          >
+            {/* Render the internal ShieldFallback directly for sandbox preview */}
+            <div
+              className="flex items-center justify-center w-24 h-24"
+              aria-label="Shield animation unavailable"
+            >
+              <div className="motion-safe:animate-[shield-pulse_2s_ease-in-out_infinite]">
+                {/* Inline SVG matching Icon name='shield' filled, 64px, primary */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 -960 960 960"
+                  width="64"
+                  height="64"
+                  fill="currentColor"
+                  className="text-primary"
+                  aria-hidden="true"
+                >
+                  <path d="M480-81q-140-35-230-162.5T160-523v-238l320-120 320 120v238q0 152-90 279.5T480-81Z" />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
