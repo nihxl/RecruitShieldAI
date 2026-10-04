@@ -27,6 +27,13 @@ export const FLAG_RULES: FlagDef[] = [
     antiPattern: /(?:no|without|zero|free|don'?t\s+pay|never\s+pay|not\s+require)\s+(?:any\s+)?(?:registration|deposit|equipment|laptop|kit|training|security)\s+(?:fee|charge|amount|deposit)/gi,
   },
   {
+    type: 'artificial_urgency',
+    title: 'High Pressure Tactics',
+    severity: 'medium',
+    description: 'Scammers often create a false sense of urgency to rush you into making a mistake.',
+    pattern: /(?:act|apply|respond|pay)\s+(?:now|immediately|urgent|within\s+\d+\s+(?:mins?|hours?))|limited\s+(?:time|seats?|slots?)/gi,
+  },
+  {
     type: 'premature_pii',
     title: 'Early Sensitive Information Request',
     severity: 'high',

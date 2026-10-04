@@ -51,7 +51,7 @@ describe('FindingCard', () => {
     render(
       <FindingCard
         kind="rule"
-        severity="High"
+        severity="high"
         title="Payment request"
         description="Requesting fees upfront is a common scam pattern."
         quote="You must pay a registration fee of $200."
@@ -83,7 +83,7 @@ describe('FindingCard', () => {
 
   it('renders without a quote block when quote is omitted', () => {
     const { container } = render(
-      <FindingCard kind="rule" severity="Low" title="Minor" description="Minor issue." />
+      <FindingCard kind="rule" severity="low" title="Minor" description="Minor issue." />
     );
     expect(container.querySelector('blockquote')).toBeNull();
   });

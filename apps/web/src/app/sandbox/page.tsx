@@ -244,21 +244,21 @@ const SandboxContent = () => {
         <div className="flex flex-col gap-3 max-w-2xl">
           <FindingCard
             kind="rule"
-            severity="High"
+            severity="high"
             title="Payment request detected"
             description="The posting asks candidates to pay an upfront registration fee, a pattern common in employment scams."
             quote="You must submit a $250 processing fee before we can proceed with your application."
           />
           <FindingCard
             kind="rule"
-            severity="Medium"
+            severity="medium"
             title="Urgency language"
             description="Language suggesting extreme time pressure and limited slots."
             quote="Only 3 spots left — apply within 24 hours or miss your chance!"
           />
           <FindingCard
             kind="rule"
-            severity="Low"
+            severity="low"
             title="Generic role description"
             description="The role description lacks specific responsibilities and team context."
           />
