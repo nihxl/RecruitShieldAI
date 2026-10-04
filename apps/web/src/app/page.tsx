@@ -6,5 +6,5 @@ export const metadata: Metadata = {
 };
 
 export default function VerifyPage() {
-  return <VerifyClient />;
+  return <VerifyClient appMode={process.env.APP_MODE} />;
 }

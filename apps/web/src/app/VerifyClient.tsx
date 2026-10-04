@@ -8,11 +8,20 @@ import { Textarea } from '@/components/Textarea';
 import { Accordion, AccordionItem } from '@/components/Accordion';
 import { MICROCOPY } from '@/lib/constants';
 
-export default function VerifyPage() {
+export default function VerifyPage({ appMode }: { appMode?: string }) {
   const router = useRouter();
   const [jobText, setJobText] = useState('');
   const [jobTitle, setJobTitle] = useState('');
   const [companyName, setCompanyName] = useState('');
+
+  React.useEffect(() => {
+    const savedText = sessionStorage.getItem('rs_draft_jobText');
+    if (savedText) setJobText(savedText);
+    const savedTitle = sessionStorage.getItem('rs_draft_jobTitle');
+    if (savedTitle) setJobTitle(savedTitle);
+    const savedCompany = sessionStorage.getItem('rs_draft_companyName');
+    if (savedCompany) setCompanyName(savedCompany);
+  }, []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,6 +38,9 @@ export default function VerifyPage() {
 
     setIsSubmitting(true);
     setError(null);
+    sessionStorage.setItem('rs_draft_jobText', jobText);
+    sessionStorage.setItem('rs_draft_jobTitle', jobTitle);
+    sessionStorage.setItem('rs_draft_companyName', companyName);
 
     try {
       const res = await fetch('/api/checks', {
@@ -66,7 +78,7 @@ export default function VerifyPage() {
       <section className="w-full px-4 md:px-10 -mt-[80px] pb-20 relative z-20 flex justify-center">
         <form onSubmit={handleSubmit} className="w-full max-w-[672px] bg-surface-container-low rounded-[var(--radius-card)] shadow-[var(--shadow-level-2)] overflow-hidden border border-surface-variant flex flex-col">
           {/* demo_full only: analysis readiness */}
-          {process.env.NEXT_PUBLIC_DEMO_FULL === 'true' && (
+          {appMode === 'demo_full' && (
             <div className="p-6 border-b border-surface-variant bg-surface-container-low/90 backdrop-blur-sm">
               <div className="flex justify-between items-center mb-2">
                 <span className="font-label-caps text-label-caps text-on-surface-variant uppercase">Analysis Readiness</span>

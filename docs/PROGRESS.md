@@ -1,6 +1,6 @@
 # RecruitShield AI Progress Log
 
-**Next task:** Task 5.3: Analyzing view (`/results/:id` while processing)
+**Next task:** Task 5.4: Results dashboard, PREVIEW (`/results/:id`)
 **Last updated:** 2026-10-04
 
 ## Decisions
@@ -19,14 +19,18 @@
 - **OD-7:** CSP and Next.js inline scripts. Verify against current Next.js docs.
 - **OD-8 (Decision):** Provenance wording finalized. mock = "Source: Mock analyzer. Example logic, not a trained model."; rules = "Source: Pattern rules (not a trained model)"; model = "Source: Trained model {modelVersion}".
 - **Decision:** Flag severities set: payment and PII high; urgency, off-platform contact and unrealistic pay medium; vague role low.
+- **Decision:** Task 5.3 Cancel button preserves text in `sessionStorage`. It does not delete the check on the backend to avoid race conditions.
+
 ## Assumptions
 - Next.js 16.3.8 uses Tailwind v4 setup which no longer requires a `tailwind.config.js` file, so scaffolding `--tailwind` creates the correct v4 setup. We updated the TS §13.1 deps command to use workspaces so Next.js dependencies go to apps/web and other dependencies like concurrently go to root.
 - Used npm workspaces directly to manage deps efficiently across the Next.js app and the model service directory.
 - Tailwind v4 natively supports mapping design tokens inside the `@theme` block in a regular `.css` file. We implemented `theme.css` with native CSS tokens that generate matching utility classes without extra Next.js configs.
+- The new 5.1 VerifyClient text strings (e.g., "Analysis Readiness", "1 of 4 checks added") are accurate approximations of the design intent.
 
 ## Known issues / follow-ups
 - **Credential Exposure:** The Neon database password was briefly exposed in the repository history (`vercelpreview.txt`). The password was rotated by the product owner on 2026-10-04.
 - /sandbox must be removed or gated before production (Task 6.4).
+- **Results Stub:** The `/results/:id` route uses a temporary stub on completion (Task 5.3), which will be replaced in Task 5.4.
 
 ## Task log
 
@@ -50,7 +54,7 @@
 | 4.3 Purge job | Done | 0bde6ae8 | Built purge job at /api/cron/purge, returns 401 without secret, defaults to 30 days retention. Moved vercel.json to apps/web/vercel.json. Implemented constant-time comparison. Tests pass. |
 | 5.1 Verify screen (/) | Done | 4447e97c | Built Verify screen at `/`. Extracted metadata to server component, built main form in `VerifyClient.tsx`. Form captures job text, optional title/company, validates length, shows error state if short, handles mock submit and redirects to `/results/:id`. Integrated `Accordion` with locked states for non-text inputs in preview. Analysis readiness bar shows in full demo mode only. |
 | 5.2 Shield shader component | Done | 67899a49 | Built ShieldShader (WebGL) and ShieldShaderDynamic (SSR-off wrapper). All DD §6 fixes applied. 9/9 tests pass. |
-| 5.3 Analyzing view | Pending | | |
+| 5.3 Analyzing view | Done | 71d1dfdd | Built ResultsClient at `/results/:id`. Polls for completion. Handles processing, complete, error, and not-found states. Added stub for Task 5.4. Preserves text in sessionStorage on cancel. |
 | 5.4 Results dashboard, PREVIEW | Pending | | |
 | 5.5 DEMO_FULL pass | Pending | | |
 | 5.6 Language Detail | Pending | | |
@@ -64,6 +68,8 @@
 | 6.5 Final review against DoD | Pending | | |
 
 ## Session notes
+- Completed Task 5.3: Built `ResultsClient` for `/results/:id`. Included polling logic every 1s, ensures processing view shows for at least 3 seconds, and switches to a 5.4 stub or error block. Shows checklist with `aria-live` region. Cancel uses `sessionStorage` to preserve draft text without deleting backend check.
+- Fixed 5.1/5.2 issues: Removed `NEXT_PUBLIC_DEMO_FULL` env access from client; added unit tests for `VerifyClient`; modified `mock.ts` so flags correctly stack and lower the score. Added `VerifyClient` tests for required character limits and successful fetching. Re-worded GLSL comments and fixed `useFallback` exhaustive-deps warning in `ShieldShader`. Verified shader is bundled in a separate chunk.
 - Completed Task 5.2: Built `ShieldShader.tsx` (WebGL client component) and `ShieldShaderDynamic.tsx` (next/dynamic SSR-off wrapper). All DD §6 fixes applied: (1) canvas sized from container with DPR capped at 2 via ResizeObserver; (2) mouse uniform and mousemove listener removed; (3) output color clamped, premultipliedAlpha:false context flag; (4) compile and link status checked with console.error on failure; (5) visibility change listener pauses RAF; IntersectionObserver pauses when off-screen; (6) unmount cancels RAF and calls WEBGL_lose_context.loseContext(); (7) static filled shield icon overlay (32px, primary). Fallback: static SVG with CSS pulse (shield-pulse keyframe added to theme.css) shown on WebGL unavailable, compile/link failure, or prefers-reduced-motion (lazy useState initializer detects reduced motion before first render, avoiding setState-in-effect lint rule). Dynamic import with ssr:false in ShieldShaderDynamic keeps shader code absent from all other route bundles. Added sandbox section at /sandbox#shield-shader with WebGL and fallback demos. 9 tests cover: no-WebGL fallback, compile failure, link failure, happy path, reduced-motion fallback, unmount cleanup (cancelAnimationFrame + loseContext), visibility pause/resume, accessible label, no-mouse-uniform. Design check, lint, typecheck and 157 tests all pass.
 - Completed Task 4.3: Built purge job at `GET /api/cron/purge`. Returns 401 without correct `CRON_SECRET` bearer header, and uses `RETENTION_DAYS` defaulting to 30. Tests run and verify `db.delete` calls using a mock database. Moved `vercel.json` to `apps/web/vercel.json` and implemented `timingSafeEqual` constant-time comparison for the cron secret.
 - **Decision:** Updated flag descriptions in `rules.ts` per PO feedback. Re-verified fee-scam fixture raw score is 15.

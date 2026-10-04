@@ -47,14 +47,16 @@ export class MockAnalyzer implements Analyzer {
       id: `mock-flag-${i + 1}`
     }));
 
-    // Deterministic base score:
-    // If it contains "genuine", give it 85 (Likely Genuine).
-    // If it has an upfront_payment flag, give it 15 (High Risk).
-    // Otherwise 60.
-    const hasPayment = flags.some(f => f.type === 'upfront_payment');
-    const baseScore = input.jobText.toLowerCase().includes('genuine') 
-      ? 85 
-      : (hasPayment ? 15 : 60);
+    // Deterministic base score stacking flags:
+    let baseScore = input.jobText.toLowerCase().includes('genuine') ? 85 : 75;
+    
+    // Stack flags
+    for (const flag of flags) {
+      if (flag.severity === 'high') baseScore -= 50;
+      else if (flag.severity === 'medium') baseScore -= 20;
+      else if (flag.severity === 'low') baseScore -= 10;
+    }
+    baseScore = Math.max(0, baseScore); // Prevent negative score before cap
       
     const finalScore = applyScoreCap(baseScore, flags);
     const bandDef = getBandForScore(finalScore);

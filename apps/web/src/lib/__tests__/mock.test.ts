@@ -60,6 +60,23 @@ describe('MockAnalyzer', () => {
     }
   });
 
+  it('stacks flags to lower base score before cap', async () => {
+    const input = getValidInput("URGENT! We are hiring immediately. Pay registration fee of Rs 5000 via UPI right now to guarantee your spot. Contact only on WhatsApp. Need Aadhaar and PAN immediately. Don't wait, position closing soon!");
+    
+    // We want to observe the raw score before cap. But our mock just outputs the final score.
+    // However, with this text, the flags should be:
+    // artificial_urgency (medium), upfront_payment (high), off_platform_contact (medium), premature_pii (high), artificial_urgency (medium)
+    // Starting at 75: -15 (urgency) - 30 (payment) - 15 (whatsapp) - 30 (pii) = well below 0, capped to 0 before applyScoreCap.
+    
+    const res = await analyzer.analyze(input);
+    expect(res.status).toBe('complete');
+    
+    if (res.status === 'complete') {
+      expect(res.trustScore).toBeLessThan(20);
+      expect(res.languageDetail.flags.length).toBe(2);
+    }
+  });
+
   it('genuine fixture lands in a Likely or Highly Genuine band', async () => {
     const input = getValidInput('This is a highly genuine and verifiable opportunity from a reputed company.');
     

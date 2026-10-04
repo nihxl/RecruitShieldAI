@@ -71,7 +71,7 @@ void main() {
   // Inner glow — clamped so it never exceeds 1 (DD §6)
   float glow = clamp(0.02 / (abs(d) + 0.01), 0.0, 1.0);
 
-  // Primary color from the design system (var --color-primary, float rgb 0.62 0.81 0.85)
+  // Primary color from the design system (float rgb 0.62 0.81 0.85, matching --color-primary)
   vec3 color = clamp(vec3(0.62, 0.81, 0.85) * glow, 0.0, 1.0);
   color *= 0.8 + 0.2 * sin(u_time + uv.y * 10.0);
   color  = clamp(color, 0.0, 1.0);
@@ -315,7 +315,7 @@ export function ShieldShader({ className = '' }: ShieldShaderProps) {
       const ext = gl.getExtension('WEBGL_lose_context');
       ext?.loseContext();
     };
-  }, []); // runs once on mount
+  }, [useFallback]); // runs once on mount, or when useFallback becomes true
 
   if (useFallback) {
     return <ShieldFallback className={`w-24 h-24 ${className}`} />;
