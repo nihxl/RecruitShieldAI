@@ -17,6 +17,10 @@ import { HighlightedPhrase } from '@/components/HighlightedPhrase';
 import { InfoBanner } from '@/components/InfoBanner';
 import { StatCard } from '@/components/StatCard';
 import { DataTable, type DataTableColumn } from '@/components/DataTable';
+import { Skeleton, SkeletonText } from '@/components/Skeleton';
+import { EmptyBlock, ErrorBlock } from '@/components/FeedbackBlocks';
+import { SimulatedBadge, ComingSoonChip } from '@/components/StatusBadge';
+import { ProvenanceBlock } from '@/components/ProvenanceBlock';
 
 // ── Data table demo types ──────────────────────────────────────────────────────
 interface CheckRow {
@@ -59,7 +63,7 @@ const SandboxContent = () => {
     <div className="max-w-4xl mx-auto p-8 flex flex-col gap-16 bg-surface text-on-surface">
       <div>
         <h1 className="text-h1-desktop font-bold mb-2">Components Sandbox</h1>
-        <p className="text-body-md text-on-surface-variant">Task 2.5 additions at the bottom of this page.</p>
+        <p className="text-body-md text-on-surface-variant">Task 2.5 additions in the middle; Task 2.6 additions at the bottom.</p>
       </div>
 
       {/* ── Existing sections ──────────────────────────────────────────────── */}
@@ -393,6 +397,186 @@ const SandboxContent = () => {
             </div>
           }
         />
+      </section>
+
+      {/* ── Task 2.6 additions ─────────────────────────────────────────────── */}
+
+      {/* Skeleton */}
+      <section className="flex flex-col gap-4">
+        <h2 className="text-h2-desktop font-semibold border-b border-outline-variant pb-2">Skeleton (Task 2.6)</h2>
+        <div className="flex flex-col gap-6 max-w-2xl">
+          <div>
+            <h3 className="text-h3-desktop mb-3">Line shape (default)</h3>
+            <div className="flex flex-col gap-2">
+              <Skeleton />
+              <Skeleton className="w-3/4" />
+              <Skeleton className="w-1/2" />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-h3-desktop mb-3">Card shape</h3>
+            <Skeleton shape="card" />
+          </div>
+          <div>
+            <h3 className="text-h3-desktop mb-3">Circle shape</h3>
+            <div className="flex gap-4">
+              <Skeleton shape="circle" />
+              <Skeleton shape="circle" className="h-16 w-16" />
+              <Skeleton shape="circle" className="h-20 w-20" />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-h3-desktop mb-3">SkeletonText (3 lines)</h3>
+            <SkeletonText lines={3} />
+          </div>
+          <div>
+            <h3 className="text-h3-desktop mb-3">Realistic module card skeleton</h3>
+            <div className="rounded-[var(--radius-item)] bg-surface-container p-4 flex items-center gap-3">
+              <Skeleton shape="circle" className="h-8 w-8 shrink-0" />
+              <div className="flex flex-col gap-2 flex-1">
+                <Skeleton className="w-1/3 h-5" />
+                <Skeleton className="w-2/3 h-4" />
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-h3-desktop mb-3">Narrow width (360px)</h3>
+            <div className="w-[360px]">
+              <SkeletonText lines={4} />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Empty and Error blocks */}
+      <section className="flex flex-col gap-4">
+        <h2 className="text-h2-desktop font-semibold border-b border-outline-variant pb-2">Empty &amp; Error Blocks (Task 2.6)</h2>
+        <div className="flex flex-col gap-6 max-w-2xl">
+          <div>
+            <h3 className="text-h3-desktop mb-3">Empty block — default microcopy</h3>
+            <div className="rounded-[var(--radius-card)] bg-surface-container-low">
+              <EmptyBlock />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-h3-desktop mb-3">Empty block — with action</h3>
+            <div className="rounded-[var(--radius-card)] bg-surface-container-low">
+              <EmptyBlock
+                title="No checks yet."
+                body="Check your first opportunity to get a risk estimate."
+                action={{ label: 'Check an opportunity', onClick: () => {} }}
+              />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-h3-desktop mb-3">Error block — default microcopy (role=alert)</h3>
+            <div className="rounded-[var(--radius-card)] bg-surface-container-low">
+              <ErrorBlock />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-h3-desktop mb-3">Error block — with retry action</h3>
+            <div className="rounded-[var(--radius-card)] bg-surface-container-low">
+              <ErrorBlock
+                action={{ label: 'Try again', onClick: () => {} }}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Simulated badge and Coming Soon chip */}
+      <section className="flex flex-col gap-4">
+        <h2 className="text-h2-desktop font-semibold border-b border-outline-variant pb-2">Status Badges (Task 2.6)</h2>
+        <div className="flex flex-col gap-6 max-w-2xl">
+          <div>
+            <h3 className="text-h3-desktop mb-3">Simulated badge</h3>
+            <p className="text-body-sm text-on-surface-variant mb-3">Hover, focus (Tab) or tap to see tooltip.</p>
+            <div className="flex flex-wrap gap-3 items-center">
+              <SimulatedBadge />
+              <span className="text-body-sm text-on-surface-variant">← appears on simulated result cards</span>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-h3-desktop mb-3">Coming Soon chip</h3>
+            <p className="text-body-sm text-on-surface-variant mb-3">Hover, focus (Tab) or tap to see tooltip.</p>
+            <div className="flex flex-wrap gap-3 items-center">
+              <ComingSoonChip />
+              <span className="text-body-sm text-on-surface-variant">← appears on locked module cards</span>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-h3-desktop mb-3">In context — narrow width (360px)</h3>
+            <div className="w-[360px] rounded-[var(--radius-item)] bg-surface-container p-4 flex items-center gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-outline/10 text-outline">
+                <span className="text-[18px]">🔬</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[20px] font-semibold text-on-surface truncate">Link Analysis</p>
+                <p className="text-body-sm text-on-surface-variant">Example result</p>
+              </div>
+              <SimulatedBadge />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Provenance block */}
+      <section className="flex flex-col gap-4">
+        <h2 className="text-h2-desktop font-semibold border-b border-outline-variant pb-2">Provenance Block (Task 2.6)</h2>
+        <div className="flex flex-col gap-8 max-w-2xl">
+          <div>
+            <h3 className="text-h3-desktop mb-3">source: &quot;mock&quot;</h3>
+            <div className="rounded-[var(--radius-card)] bg-surface-container-low p-6">
+              <p className="text-body-md text-on-surface mb-2">Result content would appear here.</p>
+              <ProvenanceBlock
+                provenance={{ source: 'mock', generatedAt: '2026-10-04T12:00:00Z' }}
+              />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-h3-desktop mb-3">source: &quot;rules&quot;</h3>
+            <div className="rounded-[var(--radius-card)] bg-surface-container-low p-6">
+              <ProvenanceBlock
+                provenance={{ source: 'rules', generatedAt: '2026-10-04T09:30:00Z' }}
+              />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-h3-desktop mb-3">source: &quot;model&quot; with version</h3>
+            <div className="rounded-[var(--radius-card)] bg-surface-container-low p-6">
+              <ProvenanceBlock
+                provenance={{ source: 'model', modelVersion: 'v2.1.0', generatedAt: '2026-10-04T08:00:00Z' }}
+              />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-h3-desktop mb-3">showUtc=true (for PDF report)</h3>
+            <div className="rounded-[var(--radius-card)] bg-surface-container-low p-6">
+              <ProvenanceBlock
+                showUtc
+                provenance={{ source: 'model', modelVersion: 'v2.1.0', generatedAt: '2026-10-04T08:00:00Z' }}
+              />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-h3-desktop mb-3">Narrow width (360px)</h3>
+            <div className="w-[360px] rounded-[var(--radius-card)] bg-surface-container-low p-4">
+              <ProvenanceBlock
+                provenance={{ source: 'rules', generatedAt: '2026-10-04T12:00:00Z' }}
+              />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-h3-desktop mb-3">Long-text disclaimer</h3>
+            <div className="rounded-[var(--radius-card)] bg-surface-container-low p-6">
+              <ProvenanceBlock
+                disclaimer="RecruitShield AI gives a risk estimate, not a guarantee. Always verify an employer through official channels before sharing any personal documents, bank details, or making any payments. This tool is not a substitute for professional advice."
+                provenance={{ source: 'model', modelVersion: 'v2.1.0', generatedAt: '2026-10-04T08:00:00Z' }}
+              />
+            </div>
+          </div>
+        </div>
       </section>
     </div>
   );
