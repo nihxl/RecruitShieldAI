@@ -10,8 +10,7 @@ export async function GET(
 ) {
   try {
     const deviceId = await getOrCreateDeviceCookie();
-    const resolvedParams = await params;
-    const { id } = resolvedParams;
+    const { id } = await params;
 
     const result = await db.select()
       .from(checks)
@@ -25,15 +24,15 @@ export async function GET(
     }
 
     const check = result[0];
-    
-    // Zod validation is applied when saving, so we just return it here
+
+    // Only return safe fields — never job text
     return NextResponse.json({
       id: check.id,
       status: check.status,
       result: check.result,
       errorCode: check.errorCode,
     });
-  } catch (error) {
+  } catch (_err) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -44,8 +43,7 @@ export async function DELETE(
 ) {
   try {
     const deviceId = await getOrCreateDeviceCookie();
-    const resolvedParams = await params;
-    const { id } = resolvedParams;
+    const { id } = await params;
 
     const result = await db.delete(checks)
       .where(and(
@@ -55,11 +53,12 @@ export async function DELETE(
       .returning({ deletedId: checks.id });
 
     if (result.length === 0) {
+      // Another device's id returns 404, never 403
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (_err) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

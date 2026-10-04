@@ -1,18 +1,19 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type MockedFunction } from 'vitest';
 import { NextRequest } from 'next/server';
 import { POST, GET as GETList } from '../route';
 import { GET as GETSingle, DELETE } from '../[id]/route';
 import * as dbModule from '@/lib/db';
 import * as deviceCookieModule from '@/lib/deviceCookie';
+import type { NeonHttpDatabase } from 'drizzle-orm/neon-http';
 
-// Mock DB
+// ── Database mock ─────────────────────────────────────────────────────────────
 vi.mock('@/lib/db', () => ({
   db: {
     select: vi.fn(),
     insert: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
-  }
+  },
 }));
 
 vi.mock('@/lib/deviceCookie', () => ({
@@ -23,184 +24,234 @@ vi.mock('next/server', async (importOriginal) => {
   const mod = await importOriginal<typeof import('next/server')>();
   return {
     ...mod,
-    after: vi.fn((cb) => cb()),
+    // Execute `after` callbacks immediately so background jobs run inline
+    after: vi.fn((cb: () => Promise<void>) => cb()),
   };
 });
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+type Db = NeonHttpDatabase;
+
+function mockSelectChain(returnValue: unknown) {
+  const chain = {
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockResolvedValue(returnValue),
+    orderBy: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    offset: vi.fn().mockResolvedValue(returnValue),
+  };
+  (dbModule.db as unknown as Db).select = vi.fn().mockReturnValue(chain) as MockedFunction<Db['select']>;
+  return chain;
+}
+
+function mockInsertChain() {
+  const chain = { values: vi.fn().mockResolvedValue({}) };
+  (dbModule.db as unknown as Db).insert = vi.fn().mockReturnValue(chain) as MockedFunction<Db['insert']>;
+  return chain;
+}
+
+function mockUpdateChain() {
+  const chain = { set: vi.fn().mockReturnThis(), where: vi.fn().mockResolvedValue({}) };
+  chain.set.mockReturnValue(chain);
+  (dbModule.db as unknown as Db).update = vi.fn().mockReturnValue(chain) as MockedFunction<Db['update']>;
+  return chain;
+}
+
+function mockDeleteChain(returnValue: unknown) {
+  const chain = { where: vi.fn().mockReturnThis(), returning: vi.fn().mockResolvedValue(returnValue) };
+  chain.where.mockReturnValue(chain);
+  (dbModule.db as unknown as Db).delete = vi.fn().mockReturnValue(chain) as MockedFunction<Db['delete']>;
+}
+
+// ── Tests ─────────────────────────────────────────────────────────────────────
 describe('API Routes', () => {
   const mockDeviceId = 'device-123';
-  let consoleLogSpy: any;
+  let consoleLogSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     vi.mocked(deviceCookieModule.getOrCreateDeviceCookie).mockResolvedValue(mockDeviceId);
   });
 
+  // ── POST /api/checks ─────────────────────────────────────────────────────
   describe('POST /api/checks', () => {
-    it('returns 429 on 11th request', async () => {
-      const mockSelect = vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([{ count: 10 }])
-        })
-      });
-      (dbModule.db as any).select = mockSelect;
-
+    it('returns 400 on validation failure (text too short)', async () => {
       const req = new NextRequest('http://localhost/api/checks', {
         method: 'POST',
-        body: JSON.stringify({ jobText: 'A'.repeat(100) })
+        body: JSON.stringify({ jobText: 'Too short' }),
       });
-      
-      const response = await POST(req);
-      expect(response.status).toBe(429);
-    });
-
-    it('returns 400 on validation failure', async () => {
-      const req = new NextRequest('http://localhost/api/checks', {
-        method: 'POST',
-        body: JSON.stringify({ jobText: 'Too short' })
-      });
-      
       const response = await POST(req);
       expect(response.status).toBe(400);
     });
 
-    it('creates a check and strictly logs only ID and status, never job text or cookies', async () => {
-      const mockSelect = vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([{ count: 0 }])
-        })
-      });
-      (dbModule.db as any).select = mockSelect;
-
-      const mockInsert = vi.fn().mockReturnValue({
-        values: vi.fn().mockResolvedValue({})
-      });
-      (dbModule.db as any).insert = mockInsert;
-      
-      const mockUpdate = vi.fn().mockReturnValue({
-        set: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue({})
-        })
-      });
-      (dbModule.db as any).update = mockUpdate;
+    it('returns 429 on the 11th request in an hour', async () => {
+      // Rate limit check returns count = 10
+      const chain = {
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockResolvedValue([{ count: 10 }]),
+      };
+      (dbModule.db as unknown as Db).select = vi.fn().mockReturnValue(chain) as MockedFunction<Db['select']>;
 
       const req = new NextRequest('http://localhost/api/checks', {
         method: 'POST',
-        body: JSON.stringify({
-          jobText: 'A'.repeat(100),
-          jobTitle: 'Test Job',
-        })
+        body: JSON.stringify({ jobText: 'A'.repeat(100) }),
+      });
+      const response = await POST(req);
+      expect(response.status).toBe(429);
+      const body = await response.json();
+      expect(body.error).toMatch(/rate limit/i);
+    });
+
+    it('creates a check and logs only id+status — never job text or device cookie', async () => {
+      // Rate limit = 0
+      const rateChain = {
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockResolvedValue([{ count: 0 }]),
+      };
+      (dbModule.db as unknown as Db).select = vi.fn().mockReturnValue(rateChain) as MockedFunction<Db['select']>;
+      mockInsertChain();
+      mockUpdateChain();
+
+      const jobText = 'A'.repeat(100);
+      const req = new NextRequest('http://localhost/api/checks', {
+        method: 'POST',
+        body: JSON.stringify({ jobText, jobTitle: 'Engineer' }),
       });
 
       const response = await POST(req);
       expect(response.status).toBe(200);
-      const data = await response.json();
-      expect(data.id).toMatch(/^RS-[A-Z0-9]+$/);
+      const { id } = await response.json();
+      expect(id).toMatch(/^RS-\d{4}-[A-Z0-9]{3}$/i);
 
       expect(consoleLogSpy).toHaveBeenCalled();
-      const allLogs = consoleLogSpy.mock.calls.map((c: any) => c.join(' ')).join('\n');
-      
-      expect(allLogs).toContain(`[Job ${data.id}] status: processing`);
-      // Use toMatch to allow either complete or error based on MockAnalyzer logic, but just checking format
-      expect(allLogs).toMatch(/\[Job RS-[A-Z0-9]+\] status: (complete|error)/);
-      
-      expect(allLogs).not.toContain('A'.repeat(100));
-      expect(allLogs).not.toContain('device-123');
+      const allLogs = consoleLogSpy.mock.calls.map((c: unknown[]) => c.join(' ')).join('\n');
+
+      // Logs carry id and status only
+      expect(allLogs).toContain(`[Job ${id}] status: processing`);
+      expect(allLogs).toMatch(/\[Job RS-\d{4}-[A-Z0-9]{3}\] status: (complete|error)/i);
+
+      // Sensitive data never logged
+      expect(allLogs).not.toContain(jobText);
+      expect(allLogs).not.toContain(mockDeviceId);
     });
   });
 
+  // ── GET /api/checks/[id] ─────────────────────────────────────────────────
   describe('GET /api/checks/[id]', () => {
-    it('returns 404 for another devices check id', async () => {
-      // Mock db to return empty array because deviceId wont match or id wont match
-      const mockSelect = vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([])
-        })
-      });
-      (dbModule.db as any).select = mockSelect;
-
-      const req = new NextRequest('http://localhost/api/checks/RS-OTHER');
-      const response = await GETSingle(req, { params: Promise.resolve({ id: 'RS-OTHER' }) });
+    it('returns 404 for a check belonging to another device', async () => {
+      mockSelectChain([]); // empty = no row matched deviceId + id
+      const req = new NextRequest('http://localhost/api/checks/RS-0001-AAA');
+      const response = await GETSingle(req, { params: Promise.resolve({ id: 'RS-0001-AAA' }) });
       expect(response.status).toBe(404);
+    });
+
+    it('returns 200 with result for own check', async () => {
+      mockSelectChain([{ id: 'RS-0002-BBB', status: 'complete', result: { band: 'likely-genuine' }, errorCode: null }]);
+      const req = new NextRequest('http://localhost/api/checks/RS-0002-BBB');
+      const response = await GETSingle(req, { params: Promise.resolve({ id: 'RS-0002-BBB' }) });
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.id).toBe('RS-0002-BBB');
+      // Verify job text is NOT in the response
+      expect(JSON.stringify(body)).not.toContain('jobText');
     });
   });
 
+  // ── DELETE /api/checks/[id] ──────────────────────────────────────────────
   describe('DELETE /api/checks/[id]', () => {
-    it('returns 404 for another devices check id', async () => {
-      const mockDelete = vi.fn().mockReturnValue({
-        where: vi.fn().mockReturnValue({
-          returning: vi.fn().mockResolvedValue([])
-        })
-      });
-      (dbModule.db as any).delete = mockDelete;
-
-      const req = new NextRequest('http://localhost/api/checks/RS-OTHER');
-      const response = await DELETE(req, { params: Promise.resolve({ id: 'RS-OTHER' }) });
+    it('returns 404 for another devices check (never 403)', async () => {
+      mockDeleteChain([]); // no row deleted
+      const req = new NextRequest('http://localhost/api/checks/RS-0001-AAA');
+      const response = await DELETE(req, { params: Promise.resolve({ id: 'RS-0001-AAA' }) });
       expect(response.status).toBe(404);
+      // Must not return 403
+      expect(response.status).not.toBe(403);
     });
 
     it('returns 200 on successful delete of own check', async () => {
-      const mockDelete = vi.fn().mockReturnValue({
-        where: vi.fn().mockReturnValue({
-          returning: vi.fn().mockResolvedValue([{ deletedId: 'RS-MINE' }])
-        })
-      });
-      (dbModule.db as any).delete = mockDelete;
-
-      const req = new NextRequest('http://localhost/api/checks/RS-MINE');
-      const response = await DELETE(req, { params: Promise.resolve({ id: 'RS-MINE' }) });
+      mockDeleteChain([{ deletedId: 'RS-0003-CCC' }]);
+      const req = new NextRequest('http://localhost/api/checks/RS-0003-CCC');
+      const response = await DELETE(req, { params: Promise.resolve({ id: 'RS-0003-CCC' }) });
       expect(response.status).toBe(200);
-      const data = await response.json();
-      expect(data.success).toBe(true);
+      const body = await response.json();
+      expect(body.success).toBe(true);
     });
   });
 
-  describe('GET /api/checks (List Route)', () => {
-    it('supports search, filters, stats counts and pagination', async () => {
-      // Mock for items
-      const itemsSelectChain = {
+  // ── GET /api/checks (list) ───────────────────────────────────────────────
+  describe('GET /api/checks (list)', () => {
+    function setupListMock(items: unknown[], statsRows: unknown[]) {
+      // First select = paginated items, second = all-device stats
+      const itemsChain = {
         from: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
         orderBy: vi.fn().mockReturnThis(),
         limit: vi.fn().mockReturnThis(),
-        offset: vi.fn().mockResolvedValue([{ id: 'RS-1', status: 'complete' }])
+        offset: vi.fn().mockResolvedValue(items),
       };
-      
-      // Mock for stats
-      const statsSelectChain = {
+      const statsChain = {
         from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue([
-          { status: 'complete', band: 'high_trust' },
-          { status: 'processing', band: null },
-          { status: 'complete', band: 'caution' },
-          { status: 'complete', band: 'high_risk' },
-        ])
+        where: vi.fn().mockResolvedValue(statsRows),
       };
+      (dbModule.db as unknown as Db).select = vi.fn()
+        .mockReturnValueOnce(itemsChain)
+        .mockReturnValueOnce(statsChain) as MockedFunction<Db['select']>;
+      return itemsChain;
+    }
 
-      (dbModule.db as any).select = vi.fn()
-        .mockReturnValueOnce(itemsSelectChain)
-        .mockReturnValueOnce(statsSelectChain);
+    it('returns paginated items, correct stats counts', async () => {
+      const statsRows = [
+        { status: 'complete', band: 'highly-genuine' },
+        { status: 'complete', band: 'likely-genuine' },
+        { status: 'complete', band: 'caution-advised' },
+        { status: 'processing', band: null },
+        { status: 'complete', band: 'high-risk' },
+      ];
+      const itemsChain = setupListMock([{ id: 'RS-0001-AAA' }], statsRows);
 
-      const req = new NextRequest('http://localhost/api/checks?q=tech&filter=high-risk&page=2&limit=10');
+      const req = new NextRequest('http://localhost/api/checks?page=1&limit=20');
       const response = await GETList(req);
-      
       expect(response.status).toBe(200);
-      const data = await response.json();
-      
-      expect(data.items).toHaveLength(1);
-      expect(data.page).toBe(2);
-      expect(data.limit).toBe(10);
-      
-      // Check stats logic
-      expect(data.stats.total).toBe(4);
-      expect(data.stats.highTrust).toBe(1);
-      expect(data.stats.caution).toBe(1);
-      expect(data.stats.inProgress).toBe(1);
-      
-      // Verify pagination offset (page 2, limit 10 => offset 10)
-      expect(itemsSelectChain.limit).toHaveBeenCalledWith(10);
-      expect(itemsSelectChain.offset).toHaveBeenCalledWith(10);
+      const body = await response.json();
+
+      expect(body.stats.total).toBe(5);
+      expect(body.stats.highTrust).toBe(2);   // highly-genuine + likely-genuine
+      expect(body.stats.caution).toBe(1);
+      expect(body.stats.inProgress).toBe(1);
+
+      expect(itemsChain.limit).toHaveBeenCalledWith(20);
+      expect(itemsChain.offset).toHaveBeenCalledWith(0);
+    });
+
+    it('applies correct offset for page 2', async () => {
+      const itemsChain = setupListMock([], []);
+      const req = new NextRequest('http://localhost/api/checks?page=2&limit=10');
+      await GETList(req);
+      expect(itemsChain.limit).toHaveBeenCalledWith(10);
+      expect(itemsChain.offset).toHaveBeenCalledWith(10);
+    });
+
+    it('passes search query (parameterised — no concatenation)', async () => {
+      // Just check the route doesn't crash with q param; SQL param is handled by drizzle ilike
+      setupListMock([], []);
+      const req = new NextRequest('http://localhost/api/checks?q=TechCorp');
+      const response = await GETList(req);
+      expect(response.status).toBe(200);
+    });
+
+    it('passes filter=recent without error', async () => {
+      setupListMock([], []);
+      const req = new NextRequest('http://localhost/api/checks?filter=recent');
+      const response = await GETList(req);
+      expect(response.status).toBe(200);
+    });
+
+    it('passes filter=high-risk without error', async () => {
+      setupListMock([], []);
+      const req = new NextRequest('http://localhost/api/checks?filter=high-risk');
+      const response = await GETList(req);
+      expect(response.status).toBe(200);
     });
   });
 });

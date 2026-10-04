@@ -1,15 +1,20 @@
 import { describe, it, expect, vi } from 'vitest';
 import { getOrCreateDeviceCookie, COOKIE_NAME } from '../deviceCookie';
+import type { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
 
 vi.mock('next/headers', () => ({
   cookies: vi.fn(),
 }));
 
+function makeCookieStore(get: ReturnType<typeof vi.fn>, set: ReturnType<typeof vi.fn>) {
+  return { get, set } as unknown as ReadonlyRequestCookies;
+}
+
 describe('getOrCreateDeviceCookie', () => {
   it('returns existing cookie if present', async () => {
     const { cookies } = await import('next/headers');
     const getMock = vi.fn().mockReturnValue({ value: 'existing-id' });
-    vi.mocked(cookies).mockResolvedValue({ get: getMock, set: vi.fn() } as any);
+    vi.mocked(cookies).mockResolvedValue(makeCookieStore(getMock, vi.fn()));
 
     const deviceId = await getOrCreateDeviceCookie();
     expect(deviceId).toBe('existing-id');
@@ -19,7 +24,7 @@ describe('getOrCreateDeviceCookie', () => {
   it('creates a new cookie with correct options if not present', async () => {
     const { cookies } = await import('next/headers');
     const setMock = vi.fn();
-    vi.mocked(cookies).mockResolvedValue({ get: vi.fn().mockReturnValue(undefined), set: setMock } as any);
+    vi.mocked(cookies).mockResolvedValue(makeCookieStore(vi.fn().mockReturnValue(undefined), setMock));
 
     const deviceId = await getOrCreateDeviceCookie();
     expect(deviceId).toBeDefined();

@@ -36,6 +36,12 @@ yarn-error.log*
 # vercel
 .vercel
 
+# scratch / test output files (must never be committed)
+cookies.txt
+*-output.txt
+*-error.txt
+vercelpreview.txt
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

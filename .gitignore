@@ -47,3 +47,9 @@ Thumbs.db
 marketing_sample_for_trulia_com-real_estate__20190901_20191031__30k_data.csv
 .~lock.*#
 node_modules/
+
+# scratch / output files (must never be committed)
+vercelpreview.txt
+*-output.txt
+*-error.txt
+cookies.txt

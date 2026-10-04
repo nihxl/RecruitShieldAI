@@ -59,28 +59,25 @@ describe('rules engine', () => {
   });
 
   describe('applyScoreCap', () => {
+    type Sev = Pick<Parameters<typeof applyScoreCap>[1][0], 'severity'>;
+    const high: Sev = { severity: 'high' };
+    const medium: Sev = { severity: 'medium' };
+
     it('caps score at 39 if high severity flag is present', () => {
-      const score = 80;
-      const newScore = applyScoreCap(score, [{ severity: 'high' } as any]);
-      expect(newScore).toBe(39);
+      expect(applyScoreCap(80, [high])).toBe(39);
     });
 
     it('does not cap score if no high severity flag is present', () => {
-      const score = 80;
-      const newScore = applyScoreCap(score, [{ severity: 'medium' } as any]);
-      expect(newScore).toBe(80);
+      expect(applyScoreCap(80, [medium])).toBe(80);
     });
 
     it('never raises a score', () => {
-      const score = 20;
-      const newScore = applyScoreCap(score, [{ severity: 'high' } as any]);
-      expect(newScore).toBe(20);
+      expect(applyScoreCap(20, [high])).toBe(20);
     });
 
     it('is idempotent', () => {
-      const score = 80;
-      const pass1 = applyScoreCap(score, [{ severity: 'high' } as any]); // 39
-      const pass2 = applyScoreCap(pass1, [{ severity: 'high' } as any]); // 39
+      const pass1 = applyScoreCap(80, [high]); // 39
+      const pass2 = applyScoreCap(pass1, [high]); // still 39
       expect(pass1).toBe(pass2);
       expect(pass2).toBe(39);
     });

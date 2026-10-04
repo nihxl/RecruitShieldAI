@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { AnalyzeInputSchema, AnalysisOutputSchema, type CompleteAnalysisOutput, type LanguageFlag } from '../AnalysisContract';
+import { AnalyzeInputSchema, AnalysisOutputSchema, type CompleteAnalysisOutput } from '../AnalysisContract';
 
 describe('AnalysisContract', () => {
   describe('AnalyzeInputSchema', () => {
@@ -69,7 +69,7 @@ describe('AnalysisContract', () => {
   });
 
   describe('AnalysisOutputSchema', () => {
-    const validBaseInput = {
+    const BASE_INPUT = {
       jobText: 'a'.repeat(100),
       charCount: 100,
       truncated: false,
@@ -79,11 +79,7 @@ describe('AnalysisContract', () => {
       id: 'RS-1234-ABC',
       createdAt: new Date().toISOString(),
       mode: 'PREVIEW',
-      input: {
-        jobText: 'a'.repeat(100),
-        charCount: 100,
-        truncated: false,
-      },
+      input: structuredClone(BASE_INPUT),
       status: 'complete',
       trustScore: 85,
       band: 'likely-genuine',
@@ -95,16 +91,13 @@ describe('AnalysisContract', () => {
     });
 
     it('validates a processing payload', () => {
-      const processing = getValidComplete();
-      (processing as any).status = 'processing';
+      const processing = { ...getValidComplete(), status: 'processing' as const };
       const res = AnalysisOutputSchema.safeParse(processing);
       expect(res.success).toBe(true);
     });
 
     it('validates an error payload', () => {
-      const errorPayload = getValidComplete();
-      (errorPayload as any).status = 'error';
-      (errorPayload as any).errorCode = 'TIMEOUT';
+      const errorPayload = { ...getValidComplete(), status: 'error' as const, errorCode: 'TIMEOUT' };
       const res = AnalysisOutputSchema.safeParse(errorPayload);
       expect(res.success).toBe(true);
     });
@@ -142,53 +135,67 @@ describe('AnalysisContract', () => {
       const res = AnalysisOutputSchema.safeParse(payload);
       expect(res.success).toBe(false);
       if (!res.success) {
-        expect(res.error.issues[0].message).toContain('band must match');
+        // charCount and band may both fire; check any issue contains 'band must match'
+        const messages = res.error.issues.map(i => i.message);
+        expect(messages.some(m => m.includes('band must match'))).toBe(true);
       }
     });
 
     it('cross-field rule: confidence only allowed when provenance.source is model', () => {
-      const payload = getValidComplete();
-      payload.provenance.source = 'rules';
-      payload.languageDetail.flags = [
-        {
-          id: '1', type: 'urgency', title: 'Urgency', severity: 'medium', confidence: 0.8,
-          description: 'desc', quote: 'quote', span: { start: 0, end: 10 }
-        }
-      ];
-      let res = AnalysisOutputSchema.safeParse(payload);
-      expect(res.success).toBe(false);
+      const makePayload = (source: 'rules' | 'model') => ({
+        ...getValidComplete(),
+        provenance: { source, generatedAt: new Date().toISOString() },
+        languageDetail: {
+          flags: [
+            {
+              id: '1', type: 'urgency', title: 'Urgency', severity: 'medium' as const, confidence: 0.8,
+              description: 'desc', quote: 'a'.repeat(10), span: { start: 0, end: 10 },
+            }
+          ]
+        },
+      });
 
-      // Change to model
-      payload.provenance.source = 'model';
-      res = AnalysisOutputSchema.safeParse(payload);
-      expect(res.success).toBe(true);
+      // With 'rules' source + confidence flag => invalid
+      const res1 = AnalysisOutputSchema.safeParse(makePayload('rules'));
+      expect(res1.success).toBe(false);
+      if (!res1.success) {
+        const messages = res1.error.issues.map(i => i.message);
+        expect(messages.some(m => m.includes('confidence is only allowed'))).toBe(true);
+      }
+
+      // With 'model' source + confidence flag => valid
+      const res2 = AnalysisOutputSchema.safeParse(makePayload('model'));
+      if (!res2.success) console.error(JSON.stringify(res2.error.issues, null, 2));
+      expect(res2.success).toBe(true);
     });
 
     it('cross-field rule: span bounds are valid', () => {
-      const payload = getValidComplete();
-      
-      const createFlagWithSpan = (start: number, end: number): LanguageFlag => ({
-        id: '1', type: 'urgency', title: 'Urgency', severity: 'medium',
-        description: 'desc', quote: 'quote', span: { start, end }
+      // text is 100 a's; build a fresh complete payload for each check
+      const makePayload = (start: number, end: number) => ({
+        ...getValidComplete(),
+        languageDetail: {
+          flags: [{
+            id: '1', type: 'urgency', title: 'Urgency', severity: 'medium' as const,
+            description: 'desc',
+            quote: 'a'.repeat(Math.max(0, end - start)),
+            span: { start, end },
+          }]
+        }
       });
 
-      // Valid: 0 to length
-      payload.languageDetail.flags = [createFlagWithSpan(0, 100)];
-      const res1 = AnalysisOutputSchema.safeParse(payload);
-      if (!res1.success) console.error(res1.error);
+      // Valid: 0..100 (inclusive of jobText boundary)
+      const res1 = AnalysisOutputSchema.safeParse(makePayload(0, 100));
+      if (!res1.success) console.error(JSON.stringify(res1.error.issues, null, 2));
       expect(res1.success).toBe(true);
 
-      // Invalid: start < 0
-      payload.languageDetail.flags = [createFlagWithSpan(-1, 10)];
-      expect(AnalysisOutputSchema.safeParse(payload).success).toBe(false);
+      // Invalid: start < 0 (Zod min(0) on start field)
+      expect(AnalysisOutputSchema.safeParse(makePayload(-1, 10)).success).toBe(false);
 
-      // Invalid: start >= end
-      payload.languageDetail.flags = [createFlagWithSpan(10, 10)];
-      expect(AnalysisOutputSchema.safeParse(payload).success).toBe(false);
+      // Invalid: start >= end (superRefine)
+      expect(AnalysisOutputSchema.safeParse(makePayload(10, 10)).success).toBe(false);
 
-      // Invalid: end > length
-      payload.languageDetail.flags = [createFlagWithSpan(90, 101)];
-      expect(AnalysisOutputSchema.safeParse(payload).success).toBe(false);
+      // Invalid: end > jobText.length (100)
+      expect(AnalysisOutputSchema.safeParse(makePayload(90, 101)).success).toBe(false);
     });
   });
 });

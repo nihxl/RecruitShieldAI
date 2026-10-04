@@ -49,7 +49,7 @@ export class MockAnalyzer implements Analyzer {
 
     // Deterministic base score:
     // If it contains "genuine", give it 85 (Likely Genuine). Otherwise 60.
-    let baseScore = input.jobText.toLowerCase().includes('genuine') ? 85 : 60;
+    const baseScore = input.jobText.toLowerCase().includes('genuine') ? 85 : 60;
     const finalScore = applyScoreCap(baseScore, flags);
     const bandDef = getBandForScore(finalScore);
 
