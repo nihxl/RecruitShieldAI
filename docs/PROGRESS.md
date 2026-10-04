@@ -1,6 +1,6 @@
 # RecruitShield AI Progress Log
 
-**Next task:** Task 5.2: Shield shader component
+**Next task:** Task 5.3: Analyzing view (`/results/:id` while processing)
 **Last updated:** 2026-10-04
 
 ## Decisions
@@ -49,7 +49,7 @@
 | 4.2 API routes | Done | e108f09f | Built API routes for POST, GET list, GET single, DELETE. Mocked db in tests for 429, 404, list and privacy checking. Fixed all lint and test issues. |
 | 4.3 Purge job | Done | 0bde6ae8 | Built purge job at /api/cron/purge, returns 401 without secret, defaults to 30 days retention. Moved vercel.json to apps/web/vercel.json. Implemented constant-time comparison. Tests pass. |
 | 5.1 Verify screen (/) | Done | 4447e97c | Built Verify screen at `/`. Extracted metadata to server component, built main form in `VerifyClient.tsx`. Form captures job text, optional title/company, validates length, shows error state if short, handles mock submit and redirects to `/results/:id`. Integrated `Accordion` with locked states for non-text inputs in preview. Analysis readiness bar shows in full demo mode only. |
-| 5.2 Shield shader component | Pending | | |
+| 5.2 Shield shader component | Done | 67899a49 | Built ShieldShader (WebGL) and ShieldShaderDynamic (SSR-off wrapper). All DD §6 fixes applied. 9/9 tests pass. |
 | 5.3 Analyzing view | Pending | | |
 | 5.4 Results dashboard, PREVIEW | Pending | | |
 | 5.5 DEMO_FULL pass | Pending | | |
@@ -64,6 +64,7 @@
 | 6.5 Final review against DoD | Pending | | |
 
 ## Session notes
+- Completed Task 5.2: Built `ShieldShader.tsx` (WebGL client component) and `ShieldShaderDynamic.tsx` (next/dynamic SSR-off wrapper). All DD §6 fixes applied: (1) canvas sized from container with DPR capped at 2 via ResizeObserver; (2) mouse uniform and mousemove listener removed; (3) output color clamped, premultipliedAlpha:false context flag; (4) compile and link status checked with console.error on failure; (5) visibility change listener pauses RAF; IntersectionObserver pauses when off-screen; (6) unmount cancels RAF and calls WEBGL_lose_context.loseContext(); (7) static filled shield icon overlay (32px, primary). Fallback: static SVG with CSS pulse (shield-pulse keyframe added to theme.css) shown on WebGL unavailable, compile/link failure, or prefers-reduced-motion (lazy useState initializer detects reduced motion before first render, avoiding setState-in-effect lint rule). Dynamic import with ssr:false in ShieldShaderDynamic keeps shader code absent from all other route bundles. Added sandbox section at /sandbox#shield-shader with WebGL and fallback demos. 9 tests cover: no-WebGL fallback, compile failure, link failure, happy path, reduced-motion fallback, unmount cleanup (cancelAnimationFrame + loseContext), visibility pause/resume, accessible label, no-mouse-uniform. Design check, lint, typecheck and 157 tests all pass.
 - Completed Task 4.3: Built purge job at `GET /api/cron/purge`. Returns 401 without correct `CRON_SECRET` bearer header, and uses `RETENTION_DAYS` defaulting to 30. Tests run and verify `db.delete` calls using a mock database. Moved `vercel.json` to `apps/web/vercel.json` and implemented `timingSafeEqual` constant-time comparison for the cron secret.
 - **Decision:** Updated flag descriptions in `rules.ts` per PO feedback. Re-verified fee-scam fixture raw score is 15.
 - Completed Task 4.1: Built Drizzle schema for `checks` using `@neondatabase/serverless`. Configured UUID device cookie `rs_device` with httpOnly, secure, SameSite Lax, and 1-year duration. Wrote tests for the cookie logic ensuring existing cookies are reused and new ones set proper attributes. Generated Drizzle migration successfully. Created `drizzle.config.ts`. Run the migration with `npx -y dotenv-cli -e .env.local -- npx drizzle-kit push` or `drizzle-kit migrate`. Note: The API must not log the cookie or job text as required.
