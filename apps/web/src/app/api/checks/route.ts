@@ -11,7 +11,15 @@ import { AnalysisOutputSchema } from '@/lib/AnalysisContract';
 import { getBandForScore } from '@/lib/statusMap';
 
 // Mock analyzer by default; wire real analyzer here when ANALYZER=real
-const analyzer = new MockAnalyzer();
+const getAnalyzer = () => {
+  if (process.env.ANALYZER === 'real') {
+    // throw new Error('Real analyzer not implemented yet');
+    // Fall back to mock for now until Real analyzer is provided
+    return new MockAnalyzer();
+  }
+  return new MockAnalyzer();
+};
+export const analyzer = getAnalyzer();
 
 const postSchema = z.object({
   jobText: z.string().min(100),

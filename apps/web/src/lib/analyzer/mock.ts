@@ -48,8 +48,14 @@ export class MockAnalyzer implements Analyzer {
     }));
 
     // Deterministic base score:
-    // If it contains "genuine", give it 85 (Likely Genuine). Otherwise 60.
-    const baseScore = input.jobText.toLowerCase().includes('genuine') ? 85 : 60;
+    // If it contains "genuine", give it 85 (Likely Genuine).
+    // If it has an upfront_payment flag, give it 15 (High Risk).
+    // Otherwise 60.
+    const hasPayment = flags.some(f => f.type === 'upfront_payment');
+    const baseScore = input.jobText.toLowerCase().includes('genuine') 
+      ? 85 
+      : (hasPayment ? 15 : 60);
+      
     const finalScore = applyScoreCap(baseScore, flags);
     const bandDef = getBandForScore(finalScore);
 

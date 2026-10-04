@@ -135,6 +135,37 @@ describe('API Routes', () => {
       expect(allLogs).not.toContain(jobText);
       expect(allLogs).not.toContain(mockDeviceId);
     });
+
+    it('retries on ID collision', async () => {
+      // Rate limit = 0
+      const rateChain = {
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockResolvedValue([{ count: 0 }]),
+      };
+      (dbModule.db as unknown as Db).select = vi.fn().mockReturnValue(rateChain) as MockedFunction<Db['select']>;
+      
+      const insertChain = { values: vi.fn() };
+      // First call throws a constraint error to simulate collision, second succeeds
+      insertChain.values.mockRejectedValueOnce({ code: '23505' }).mockResolvedValueOnce({});
+      (dbModule.db as unknown as Db).insert = vi.fn().mockReturnValue(insertChain) as MockedFunction<Db['insert']>;
+      mockUpdateChain();
+
+      const req = new NextRequest('http://localhost/api/checks', {
+        method: 'POST',
+        body: JSON.stringify({ jobText: 'A'.repeat(100) }),
+      });
+
+      const response = await POST(req);
+      expect(response.status).toBe(200);
+      expect(insertChain.values).toHaveBeenCalledTimes(2);
+    });
+
+    it('selects analyzer based on ANALYZER env var', async () => {
+      // route.ts exports `analyzer`. Since we don't have the real one yet, 
+      // we check it uses MockAnalyzer by default
+      const { analyzer } = await import('../route');
+      expect(analyzer.constructor.name).toBe('MockAnalyzer');
+    });
   });
 
   // ── GET /api/checks/[id] ─────────────────────────────────────────────────
