@@ -1,6 +1,6 @@
 # RecruitShield AI Progress Log
 
-**Next task:** Task 3.3: Analyzer interface and mock analyzer
+**Next task:** Task 4.1: Database schema and device cookie
 **Last updated:** 2026-10-04
 
 ## Decisions
@@ -45,7 +45,7 @@
 | 2.6 Feedback blocks and labels | Done | 8a856472 | Built Skeleton (line/card/circle, motion-safe pulse), EmptyBlock, ErrorBlock (role=alert), SimulatedBadge, ComingSoonChip, ProvenanceBlock (3 source wording variants). 94 tests pass. |
 | 3.1 Analysis contract and validation | Done | | Built AnalysisContract.ts using Zod. Contract covers Complete, Processing, and Error states, and implements cross-field validation rules (bounds, scores, lengths). Aligned UI components. |
 | 3.2 Band logic, flag rules and score cap | Done | | Built `rules.ts` with flag extraction (UTF-16 spans match exactly, negations skip matches, no confidence for rules) and `applyScoreCap` (idempotent, never raises score). Covered Indian scams. |
-| 3.3 Analyzer interface and mock analyzer | Pending | | |
+| 3.3 Analyzer interface and mock analyzer | Done | | Built `Analyzer` interface and `MockAnalyzer` implementation. Fully deterministic scoring based on text patterns, injectable clock for tests, and dev/test failure hook handling. Validated against Zod contract. |
 | 4.1 Database schema and device cookie | Pending | | |
 | 4.2 API routes | Pending | | |
 | 4.3 Purge job | Pending | | |
@@ -65,6 +65,7 @@
 | 6.5 Final review against DoD | Pending | | |
 
 ## Session notes
+- Completed Task 3.3: Built `Analyzer` interface and `MockAnalyzer` class (`apps/web/src/lib/analyzer/mock.ts`). The mock is entirely deterministic: it scores text and generates consistent results without `Math.random` or date-based mutations in logic. `provenance.generatedAt` accepts an injectable clock via options for strict testing. Integrated the dev/test forced failure hook (OD-5) which throws a schema-compliant error payload in development but safely ignores the flag in production. Integrated the Task 3.2 rules engine and `applyScoreCap` directly. Fixtures "scam-with-fee" and "genuine" trigger their respective flags and bands correctly. `MockAnalyzer` strictly generates results that pass the complete Zod contract validation.
 - Completed Task 3.2: Built `rules.ts` for regex-based flag extraction and score capping. Implemented patterns for Indian scam wording (registration, deposit, kit, laptop, UPI, WA/Telegram only, Aadhaar, PAN, bank). Built negative lookbehind/negation handling (e.g. "no registration fee"). Ensured spans perfectly match `slice(start, end)` using UTF-16 code units (JS native indices). Flags extracted by rules strictly omit `confidence`. Built `applyScoreCap` which is idempotent and strictly enforces the payment-request rule cap of 39 (High Risk band) without ever raising a score. Wrote new microcopy for flag titles and descriptions (recorded as Assumption for PO review). All unit tests pass.
 - Completed Task 3.1: Created `AnalysisContract.ts` with Zod. Implemented discriminated union on `status`. Recorded assumptions: (1) API normalizes CRLF to LF and trims `jobText` before validation. (2) `modules` array elements use `findings: { text, verdict }[]` as it wasn't specified in PRD. Cross-field rules built with `.superRefine()` (trustScore matches band, spans within bounds, charCount matches length, confidence only for model). Aligned UI components (`ProvenanceBlock`, `FindingCard`, `HighlightedPhrase`, `ModuleCard`) to use contract types directly. Tests (including bounds, ID generator formats, valid/invalid payloads) are green. Removed Known Issue about local UI prop types.
 - **Housekeeping (pre-2.6, commit be78b384):** Confirmed all sandbox sections 2.2–2.4 present (buttons, inputs, chips, progress bar, trust gauge all sizes/bands, accordion, tooltip, modal & toast). StatCard icons: total=`shield` → replaced with `analytics` (added to generate-icons.js, regenerated); high-trust=`verified` ✅; caution=`warning` ✅; in-progress=`progress_activity` ✅. ModuleCard border fix: DD §4 says 4px left border for alert states only — was incorrectly applying to locked and simulated too; fixed to only color alert variants (caution, fail, error). Added Known Issue about Task 2.5 prop types needing Task 3.1 alignment.
