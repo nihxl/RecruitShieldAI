@@ -10,6 +10,7 @@ import { Modal } from '@/components/Modal';
 import { ToastProvider, useToast } from '@/components/Toast';
 import { Accordion, AccordionItem } from '@/components/Accordion';
 import { Tooltip } from '@/components/Tooltip';
+import { TrustGauge } from '@/components/TrustGauge';
 
 const SandboxContent = () => {
   const { showToast } = useToast();
@@ -70,6 +71,34 @@ const SandboxContent = () => {
         <div className="max-w-md flex flex-col gap-4">
           <ProgressBar value={25} label="25% Complete" showLabel />
           <ProgressBar value={75} />
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-h2-desktop font-semibold border-b border-outline-variant pb-2">Trust Gauge</h2>
+        
+        <h3 className="text-h3-desktop mt-4">Small (64px)</h3>
+        <div className="flex flex-wrap gap-8 items-center bg-surface-container-low p-4 rounded-lg">
+          <TrustGauge score={100} size="sm" />
+          <TrustGauge score={72} size="sm" />
+          <TrustGauge score={45} size="sm" />
+          <TrustGauge score={12} size="sm" />
+        </div>
+
+        <h3 className="text-h3-desktop mt-4">Medium (192px)</h3>
+        <div className="flex flex-wrap gap-8 items-center bg-surface-container-low p-4 rounded-lg">
+          <TrustGauge score={100} size="md" />
+          <TrustGauge score={72} size="md" />
+          <TrustGauge score={45} size="md" />
+          <TrustGauge score={12} size="md" />
+        </div>
+
+        <h3 className="text-h3-desktop mt-4">Large (256px)</h3>
+        <div className="flex flex-wrap gap-8 items-center bg-surface-container-low p-4 rounded-lg">
+          <TrustGauge score={100} size="lg" />
+          <TrustGauge score={72} size="lg" />
+          <TrustGauge score={45} size="lg" />
+          <TrustGauge score={12} size="lg" />
         </div>
       </section>
 

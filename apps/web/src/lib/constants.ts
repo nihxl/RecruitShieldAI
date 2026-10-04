@@ -1,0 +1,17 @@
+export const MICROCOPY = {
+  verifyHero: "Know before you apply. Paste a job post and get a risk estimate in seconds.",
+  textOnlyHelper: "Text analysis is available now. Document, company and link checks are coming soon.",
+  privacyLine: "We analyse your text to produce this score. Don't paste passwords, OTPs or bank details. Privacy Policy",
+  comingSoonTooltip: "This check is under development and will arrive in a later release.",
+  simulatedTooltip: "Example result for demonstration. Not based on a real check.",
+  highlyGenuineSummary: "This posting looks very consistent with genuine job listings.",
+  likelyGenuineSummary: "No common fraud patterns found, though this is an estimate. Verify the company independently before sharing documents.",
+  cautionAdvisedSummary: "Some signals need a closer look. Confirm the recruiter and company before you share personal details or pay anything.",
+  highRiskSummary: "This posting matches patterns commonly seen in scams. Do not pay fees or share bank or ID details.",
+  disclaimer: "RecruitShield AI gives a risk estimate, not a guarantee. Always verify an employer through official channels.",
+  shortInputError: "Add at least 100 characters so we can analyse the posting.",
+  analysisFailed: "We couldn't complete the analysis. Your text is still here. Try again.",
+  zeroFlags: "No fraud patterns detected in this text.",
+  emptyHistory: "No checks yet. Check your first opportunity.",
+  deleteConfirm: "Delete this check? This removes the report and cannot be undone.",
+};
