@@ -1,21 +1,21 @@
 # RecruitShield AI Progress Log
 
-**Next task:** Task 2.1: Navigation and structural shell
+**Next task:** Task 2.3: Accessible primitives (Radix wrappers)
 **Last updated:** 2026-10-04
 
 ## Decisions
 - Accounts: Anonymous for now
 - Stored data: Result plus submitted text for 30 days
 - Share Report: Skipped
-- Payment-request rule (OD-6): Force High Risk (score capped at 39)
-- DEMO_FULL (OD-5): Built as environment switch, off by default
+- Payment-request rule (OQ-6): Force High Risk (score capped at 39)
+- DEMO_FULL (OQ-5): Built as environment switch, off by default
 - Constraints: Free tier only
-- **OD-1 (Decided):** Icons vs strict CSP. Recommendation: use npm SVG package only, drop Google Fonts fallback.
+- **OD-1 (Decision):** Icons vs strict CSP. Will use npm SVG package only, drop Google Fonts fallback.
 - **OD-2 (Open):** Redundant "Recent" filter. Needs product-owner decision.
 - **OD-3:** Success color. Pass states use secondary with icon and label.
 - **OD-4:** DESIGN.md vs Design Document. Design Document wins (role-based radius, top bar).
-- **OD-5 (Decided):** Mock failure hook. Scenario D needs a way to force an error. Proposed as dev/test-only switch.
-- **OD-6 (Decided):** Title and company max length. Proposed 120 characters each.
+- **OD-5 (Decision):** Mock failure hook. Scenario D needs a way to force an error. Built as dev/test-only switch.
+- **OD-6 (Decision):** Title and company max length. Set to 120 characters each.
 - **OD-7:** CSP and Next.js inline scripts. Verify against current Next.js docs.
 
 ## Assumptions
@@ -24,7 +24,7 @@
 - Tailwind v4 natively supports mapping design tokens inside the `@theme` block in a regular `.css` file. We implemented `theme.css` with native CSS tokens that generate matching utility classes without extra Next.js configs.
 
 ## Known issues / follow-ups
-- (Will log known issues here)
+- /sandbox must be removed or gated before production (Task 6.4).
 
 ## Task log
 
@@ -34,8 +34,8 @@
 | 1.2 Design tokens and typography | Done | 6b40f52 | Created theme.css with all design tokens, configured Public Sans font, and added a design check script |
 | 1.3 Icons and brand assets | Done | bfab36b | Generated inline Icon component with @material-symbols/svg-400, created favicon/OG images, and added unit tests |
 | 1.4 CI/CD and environments | Done | 71c911a | Configured GitHub Actions with Lighthouse CI, pinned Node to 22, and documented Vercel/Neon preview plan |
-| 2.1 Navigation and structural shell | Pending | | |
-| 2.2 Base interactive elements | Pending | | |
+| 2.1 Navigation and structural shell | Done | 99f2de0 | Built TopBar, Footer, and structural shell with unique document titles. check-design fails on favicon/OG SVGs due to excluding only Icon.tsx. |
+| 2.2 Base interactive elements | Done | 7d2dd07 | Built Button, Input, Textarea, Chip, ProgressBar, Modal, and Toast with Radix and Tailwind v4. Added sandbox page and unit tests. |
 | 2.3 Accessible primitives (Radix wrappers) | Pending | | |
 | 2.4 Status map, microcopy and Trust gauge | Pending | | |
 | 2.5 Content cards and data display | Pending | | |
@@ -62,8 +62,15 @@
 | 6.5 Final review against DoD | Pending | | |
 
 ## Session notes
+- Completed Task 2.2: Built base interactive elements (Button, Input, Textarea, Chip, ProgressBar, Modal, Toast) conforming to DD §4 requirements. Reused Icon component. Integrated Radix UI for Modal. Implemented character counter with error coloring limit in Textarea. Added `/sandbox` page to showcase all variants and states. Added unit tests for key behaviours. Verified motion-reduce support.
+
+- Completed Task 2.1: Built `TopBar` and `Footer` components. Implemented the layout shell with skip-to-content link, landmarks, and unique document titles using Next.js `metadata.template`. Navigation highlights active items and includes a mobile hamburger sheet. Verified `check-design.sh` fails on `favicon.svg` and `opengraph-image.svg` after updating it to exclude ONLY `Icon.tsx`. Tests and linting pass.
+
 - Completed Task 1.4: Pinned Node.js 22 LTS in `apps/web/package.json`. Added Lighthouse CI to `.github/workflows/ci.yml` targeting the Verify page, enforcing mobile performance >= 85 and accessibility >= 95 via `lighthouserc.json`.
   - **Preview DB Plan**: We will provision a secondary Neon database branch (or separate Neon project on the free tier) exclusively for Vercel Preview deployments. Vercel will inject a distinct `DATABASE_URL` for the `Preview` environment compared to `Production`. This ensures test data from PRs never corrupts the main DB.
+
 - Completed Task 1.3: Updated check-design.sh to exclude SVGs, fixed generate-icons.js script to properly inline the SVGs from @material-symbols/svg-400 with the correct viewBox (0 -960 960 960). Renamed expand_more mapping to keyboard_arrow_down. Generated Icon component with inline SVGs to avoid layout shift. Added unit tests for the Icon component. Created favicon and opengraph share image per design document. Removed default Next.js icons.
+
 - Completed Task 1.2: Added theme.css with all defined design tokens, configured Public Sans via next/font/google, created a sample page to show all tokens, added `check-design.sh` to prevent hardcoded hex values, and verified everything works.
+
 - Completed Task 1.1: scaffolded monorepo, web app, configured CI, installed all dependencies, created root scripts and verified all checks (lint, typecheck, test) pass successfully.
