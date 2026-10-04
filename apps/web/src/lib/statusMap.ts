@@ -15,7 +15,8 @@ export type ColorRole =
   | "tertiary"
   | "error"
   | "outline"
-  | "surface-variant";
+  | "surface-variant"
+  | "tertiary-outline";
 
 export interface BandDef {
   id: BandId;
@@ -64,13 +65,13 @@ export const STATUS_BANDS: Record<BandId, BandDef> = {
   simulated: {
     id: "simulated",
     label: "Simulated",
-    colorRole: "tertiary",
+    colorRole: "tertiary-outline",
     icon: "science",
     summary: MICROCOPY.simulatedTooltip,
   },
   error: {
     id: "error",
-    label: "Error",
+    label: "Something went wrong",
     colorRole: "error",
     icon: "error",
     summary: MICROCOPY.analysisFailed,
