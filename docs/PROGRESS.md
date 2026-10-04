@@ -1,6 +1,6 @@
 # RecruitShield AI Progress Log
 
-**Next task:** Task 3.2: Band logic, flag rules and score cap
+**Next task:** Task 3.3: Analyzer interface and mock analyzer
 **Last updated:** 2026-10-04
 
 ## Decisions
@@ -26,6 +26,7 @@
 
 ## Known issues / follow-ups
 - /sandbox must be removed or gated before production (Task 6.4).
+- **Assumption (needs product-owner review — Task 3.2 Rules):** Flag microcopy defined as: (1) `upfront_payment` (severity: high) -> Title: "Payment Requested", Desc: "Legitimate employers never ask for payment, deposits, or equipment fees before hiring." (2) `premature_pii` (severity: high) -> Title: "Early Sensitive Information Request", Desc: "Asking for PAN, Aadhaar, or bank details before a formal offer is a severe privacy risk." (3) `off_platform_contact` (severity: medium) -> Title: "Unverifiable Contact Method", Desc: "Communicating exclusively through messaging apps like WhatsApp or Telegram hides the recruiter's identity."
 
 
 ## Task log
@@ -43,7 +44,7 @@
 | 2.5 Content cards and data display | Done | 4878ec2c | Built ModuleCard (6 variants, expandable, navigating), FindingCard (rule/model), HighlightedPhrase, InfoBanner, StatCard, DataTable. 66 tests pass. |
 | 2.6 Feedback blocks and labels | Done | 8a856472 | Built Skeleton (line/card/circle, motion-safe pulse), EmptyBlock, ErrorBlock (role=alert), SimulatedBadge, ComingSoonChip, ProvenanceBlock (3 source wording variants). 94 tests pass. |
 | 3.1 Analysis contract and validation | Done | | Built AnalysisContract.ts using Zod. Contract covers Complete, Processing, and Error states, and implements cross-field validation rules (bounds, scores, lengths). Aligned UI components. |
-| 3.2 Band logic, flag rules and score cap | Pending | | |
+| 3.2 Band logic, flag rules and score cap | Done | | Built `rules.ts` with flag extraction (UTF-16 spans match exactly, negations skip matches, no confidence for rules) and `applyScoreCap` (idempotent, never raises score). Covered Indian scams. |
 | 3.3 Analyzer interface and mock analyzer | Pending | | |
 | 4.1 Database schema and device cookie | Pending | | |
 | 4.2 API routes | Pending | | |
@@ -64,6 +65,7 @@
 | 6.5 Final review against DoD | Pending | | |
 
 ## Session notes
+- Completed Task 3.2: Built `rules.ts` for regex-based flag extraction and score capping. Implemented patterns for Indian scam wording (registration, deposit, kit, laptop, UPI, WA/Telegram only, Aadhaar, PAN, bank). Built negative lookbehind/negation handling (e.g. "no registration fee"). Ensured spans perfectly match `slice(start, end)` using UTF-16 code units (JS native indices). Flags extracted by rules strictly omit `confidence`. Built `applyScoreCap` which is idempotent and strictly enforces the payment-request rule cap of 39 (High Risk band) without ever raising a score. Wrote new microcopy for flag titles and descriptions (recorded as Assumption for PO review). All unit tests pass.
 - Completed Task 3.1: Created `AnalysisContract.ts` with Zod. Implemented discriminated union on `status`. Recorded assumptions: (1) API normalizes CRLF to LF and trims `jobText` before validation. (2) `modules` array elements use `findings: { text, verdict }[]` as it wasn't specified in PRD. Cross-field rules built with `.superRefine()` (trustScore matches band, spans within bounds, charCount matches length, confidence only for model). Aligned UI components (`ProvenanceBlock`, `FindingCard`, `HighlightedPhrase`, `ModuleCard`) to use contract types directly. Tests (including bounds, ID generator formats, valid/invalid payloads) are green. Removed Known Issue about local UI prop types.
 - **Housekeeping (pre-2.6, commit be78b384):** Confirmed all sandbox sections 2.2–2.4 present (buttons, inputs, chips, progress bar, trust gauge all sizes/bands, accordion, tooltip, modal & toast). StatCard icons: total=`shield` → replaced with `analytics` (added to generate-icons.js, regenerated); high-trust=`verified` ✅; caution=`warning` ✅; in-progress=`progress_activity` ✅. ModuleCard border fix: DD §4 says 4px left border for alert states only — was incorrectly applying to locked and simulated too; fixed to only color alert variants (caution, fail, error). Added Known Issue about Task 2.5 prop types needing Task 3.1 alignment.
 - Completed Task 2.6: Built Skeleton (line/card/circle shapes, `motion-safe:animate-[skeleton-pulse]` CSS keyframe added to theme.css, no pulse under prefers-reduced-motion), EmptyBlock (default `emptyHistory` microcopy), ErrorBlock (`role=alert` + `aria-live=assertive`, default `analysisFailed` microcopy), SimulatedBadge (tertiary-outline, science icon, label from statusMap, tooltip from DD §10), ComingSoonChip (outline color, lock icon, label from statusMap, tooltip from DD §10), ProvenanceBlock (disclaimer always rendered per PRD §5, provenance source wording as per new assumption, local time by default, `showUtc` for PDF report). All sandbox demos including narrow-width cases. 94 tests pass, lint clean, typecheck clean, design check clean. Provenance wording assumption recorded in PROGRESS.md and component header for product-owner confirmation.
