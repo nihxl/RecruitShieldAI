@@ -29,10 +29,26 @@ describe('GET /api/cron/purge', () => {
     process.env.RETENTION_DAYS = '30';
   });
 
-  it('returns 401 without the correct CRON_SECRET bearer header', async () => {
+  it('returns 401 with missing authorization header', async () => {
+    const req = new NextRequest('http://localhost/api/cron/purge');
+    const response = await GET(req);
+    expect(response.status).toBe(401);
+  });
+
+  it('returns 401 with wrong length secret', async () => {
     const req = new NextRequest('http://localhost/api/cron/purge', {
       headers: {
-        authorization: 'Bearer wrongsecret',
+        authorization: 'Bearer wronglength',
+      }
+    });
+    const response = await GET(req);
+    expect(response.status).toBe(401);
+  });
+
+  it('returns 401 with wrong secret of same length', async () => {
+    const req = new NextRequest('http://localhost/api/cron/purge', {
+      headers: {
+        authorization: 'Bearer secret456', // Same length as 'secret123'
       }
     });
     const response = await GET(req);

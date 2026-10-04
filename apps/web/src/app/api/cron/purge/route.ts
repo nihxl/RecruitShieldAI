@@ -2,13 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { checks } from '@/lib/db/schema';
 import { lt } from 'drizzle-orm';
+import { timingSafeEqual } from 'node:crypto';
 
 export async function GET(req: NextRequest) {
   try {
     const authHeader = req.headers.get('authorization');
     const secret = process.env.CRON_SECRET;
 
-    if (!secret || authHeader !== `Bearer ${secret}`) {
+    if (!secret || !authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const providedSecret = authHeader.substring(7);
+    
+    if (providedSecret.length !== secret.length) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const providedBuffer = Buffer.from(providedSecret);
+    const secretBuffer = Buffer.from(secret);
+
+    if (!timingSafeEqual(providedBuffer, secretBuffer)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

@@ -1,6 +1,6 @@
 # RecruitShield AI Progress Log
 
-**Next task:** Task 4.3: Purge job
+**Next task:** Task 5.1: Verify screen (/)
 **Last updated:** 2026-10-04
 
 ## Decisions
@@ -18,7 +18,7 @@
 - **OD-6 (Decision):** Title and company max length. Set to 120 characters each.
 - **OD-7:** CSP and Next.js inline scripts. Verify against current Next.js docs.
 - **OD-8 (Decision):** Provenance wording finalized. mock = "Source: Mock analyzer. Example logic, not a trained model."; rules = "Source: Pattern rules (not a trained model)"; model = "Source: Trained model {modelVersion}".
-
+- **Decision:** Flag severities set: payment and PII high; urgency, off-platform contact and unrealistic pay medium; vague role low.
 ## Assumptions
 - Next.js 16.3.8 uses Tailwind v4 setup which no longer requires a `tailwind.config.js` file, so scaffolding `--tailwind` creates the correct v4 setup. We updated the TS §13.1 deps command to use workspaces so Next.js dependencies go to apps/web and other dependencies like concurrently go to root.
 - Used npm workspaces directly to manage deps efficiently across the Next.js app and the model service directory.
@@ -47,7 +47,7 @@
 | 3.3 Analyzer interface and mock analyzer | Done | 0df235cd | Built `Analyzer` interface and `MockAnalyzer` implementation. Fully deterministic scoring based on text patterns, injectable clock for tests, and dev/test failure hook handling. Validated against Zod contract. |
 | 4.1 Database schema and device cookie | Done | 9233945 | Configured Drizzle schema for `checks` table, built `rs_device` cookie utility, generated migration and set up Neon serverless connection. Cookie correctly strictly enforces httpOnly, secure, and SameSite Lax policies. |
 | 4.2 API routes | Done | e108f09f | Built API routes for POST, GET list, GET single, DELETE. Mocked db in tests for 429, 404, list and privacy checking. Fixed all lint and test issues. |
-| 4.3 Purge job | Pending | | |
+| 4.3 Purge job | Done | 87b2e048 | Built purge job at /api/cron/purge, returns 401 without secret, defaults to 30 days retention. Added daily schedule to vercel.json. Added tests mocking db.delete. |
 | 5.1 Verify screen (/) | Pending | | |
 | 5.2 Shield shader component | Pending | | |
 | 5.3 Analyzing view | Pending | | |
@@ -64,6 +64,7 @@
 | 6.5 Final review against DoD | Pending | | |
 
 ## Session notes
+- Completed Task 4.3: Built purge job at `GET /api/cron/purge`. Returns 401 without correct `CRON_SECRET` bearer header, and uses `RETENTION_DAYS` defaulting to 30. Tests run and verify `db.delete` calls using a mock database. Added `vercel.json` with the daily schedule path.
 - Completed Task 4.1: Built Drizzle schema for `checks` using `@neondatabase/serverless`. Configured UUID device cookie `rs_device` with httpOnly, secure, SameSite Lax, and 1-year duration. Wrote tests for the cookie logic ensuring existing cookies are reused and new ones set proper attributes. Generated Drizzle migration successfully. Created `drizzle.config.ts`. Run the migration with `npx -y dotenv-cli -e .env.local -- npx drizzle-kit push` or `drizzle-kit migrate`. Note: The API must not log the cookie or job text as required.
 - Completed Task 3.3: Built `Analyzer` interface and `MockAnalyzer` class (`apps/web/src/lib/analyzer/mock.ts`). The mock is entirely deterministic: it scores text and generates consistent results without `Math.random` or date-based mutations in logic. `provenance.generatedAt` accepts an injectable clock via options for strict testing. Integrated the dev/test forced failure hook (OD-5) which throws a schema-compliant error payload in development but safely ignores the flag in production. Integrated the Task 3.2 rules engine and `applyScoreCap` directly. Fixtures "scam-with-fee" and "genuine" trigger their respective flags and bands correctly. `MockAnalyzer` strictly generates results that pass the complete Zod contract validation.
 - Completed Task 3.2: Built `rules.ts` for regex-based flag extraction and score capping. Implemented patterns for Indian scam wording (registration, deposit, kit, laptop, UPI, WA/Telegram only, Aadhaar, PAN, bank). Built negative lookbehind/negation handling (e.g. "no registration fee"). Ensured spans perfectly match `slice(start, end)` using UTF-16 code units (JS native indices). Flags extracted by rules strictly omit `confidence`. Built `applyScoreCap` which is idempotent and strictly enforces the payment-request rule cap of 39 (High Risk band) without ever raising a score. Wrote new microcopy for flag titles and descriptions (recorded as Assumption for PO review). All unit tests pass.
