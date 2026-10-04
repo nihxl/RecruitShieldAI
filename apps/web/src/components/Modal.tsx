@@ -10,6 +10,7 @@ export interface ModalProps {
   description?: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  variant?: 'default' | 'destructive-confirm';
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -20,7 +21,10 @@ export const Modal: React.FC<ModalProps> = ({
   description,
   children,
   footer,
+  variant = 'default',
 }) => {
+  const isDestructive = variant === 'destructive-confirm';
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       {trigger && <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>}
@@ -28,7 +32,7 @@ export const Modal: React.FC<ModalProps> = ({
         <Dialog.Overlay className="fixed inset-0 bg-black/60 z-40 animate-in fade-in motion-reduce:animate-none" />
         <Dialog.Content className="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] w-full max-w-lg bg-surface-container-low rounded-[var(--radius-card)] shadow-[var(--shadow-level-2)] p-6 z-50 animate-in fade-in zoom-in-95 motion-reduce:animate-none focus:outline-none max-h-[85vh] overflow-y-auto">
           <div className="flex items-center justify-between mb-4">
-            <Dialog.Title className="text-h3-desktop font-semibold text-on-surface">
+            <Dialog.Title className={`text-h3-desktop font-semibold ${isDestructive ? 'text-error' : 'text-on-surface'}`}>
               {title}
             </Dialog.Title>
             <Dialog.Close asChild>

@@ -1,10 +1,20 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
+
+class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+window.ResizeObserver = ResizeObserver;
+
 import { Button } from '../Button';
 import { Input } from '../Input';
 import { Textarea } from '../Textarea';
 import { Chip } from '../Chip';
+import { Accordion, AccordionItem } from '../Accordion';
+import { Tooltip } from '../Tooltip';
 
 describe('Interactive Elements', () => {
   describe('Button', () => {
@@ -86,6 +96,53 @@ describe('Interactive Elements', () => {
       rerender(<Chip variant="filter" label="Filter" selected />);
       expect(screen.getByRole('button', { name: /filter/i })).toHaveClass('bg-primary-container');
       expect(screen.getByRole('button', { name: /filter/i })).toHaveAttribute('aria-pressed', 'true');
+    });
+  });
+
+  describe('Accordion', () => {
+    it('renders with correct aria attributes and reacts to keyboard', () => {
+      render(
+        <Accordion type="single" collapsible>
+          <AccordionItem value="item-1" title="Accordion Title">
+            Accordion Content
+          </AccordionItem>
+        </Accordion>
+      );
+      const trigger = screen.getByRole('button', { name: /Accordion Title/i });
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      
+      fireEvent.click(trigger);
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByText('Accordion Content')).toBeInTheDocument();
+    });
+
+    it('renders locked variant as disabled', () => {
+      render(
+        <Accordion type="single" collapsible>
+          <AccordionItem value="item-1" title="Locked Item" variant="locked">
+            Locked Content
+          </AccordionItem>
+        </Accordion>
+      );
+      const trigger = screen.getByText('Locked Item').closest('button');
+      expect(trigger).toHaveAttribute('aria-disabled', 'true');
+      expect(trigger).toBeDisabled();
+    });
+  });
+
+  describe('Tooltip', () => {
+    it('opens on tap/click and handles keyboard focus', async () => {
+      render(
+        <Tooltip content="Tooltip content">
+          <button>Hover me</button>
+        </Tooltip>
+      );
+      const trigger = screen.getByText('Hover me');
+      
+      fireEvent.click(trigger);
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip).toBeInTheDocument();
+      expect(tooltip).toHaveTextContent('Tooltip content');
     });
   });
 });

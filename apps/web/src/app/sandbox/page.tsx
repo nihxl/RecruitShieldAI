@@ -8,6 +8,8 @@ import { Chip } from '@/components/Chip';
 import { ProgressBar } from '@/components/ProgressBar';
 import { Modal } from '@/components/Modal';
 import { ToastProvider, useToast } from '@/components/Toast';
+import { Accordion, AccordionItem } from '@/components/Accordion';
+import { Tooltip } from '@/components/Tooltip';
 
 const SandboxContent = () => {
   const { showToast } = useToast();
@@ -68,6 +70,32 @@ const SandboxContent = () => {
         <div className="max-w-md flex flex-col gap-4">
           <ProgressBar value={25} label="25% Complete" showLabel />
           <ProgressBar value={75} />
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-h2-desktop font-semibold border-b border-outline-variant pb-2">Accordion</h2>
+        <div className="max-w-2xl flex flex-col bg-surface-container-low rounded-lg">
+          <Accordion type="single" collapsible>
+            <AccordionItem value="item-1" title="Standard Section" subtitle="This is a standard section" icon="info">
+              Content for standard section.
+            </AccordionItem>
+            <AccordionItem value="item-2" title="Added Section" subtitle="This section has an added badge" icon="person" variant="added">
+              Content for added section.
+            </AccordionItem>
+            <AccordionItem value="item-3" title="Locked Section" subtitle="This section is locked" icon="lock" variant="locked">
+              This shouldn&apos;t be visible.
+            </AccordionItem>
+          </Accordion>
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-h2-desktop font-semibold border-b border-outline-variant pb-2">Tooltip</h2>
+        <div className="flex gap-4">
+          <Tooltip content="This is a helpful tooltip message that explains something.">
+            <span className="underline decoration-dotted underline-offset-4 bg-tertiary-container/15 text-on-surface hover:bg-tertiary-container/30 transition-colors p-1">Hover, focus, or tap me</span>
+          </Tooltip>
         </div>
       </section>
 

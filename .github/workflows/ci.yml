@@ -22,6 +22,8 @@ jobs:
         run: npm run lint
       - name: Typecheck
         run: npm run typecheck
+      - name: Check Design
+        run: ./scripts/check-design.sh
       - name: Unit Tests
         run: npm run test
       - name: Install Playwright Browsers

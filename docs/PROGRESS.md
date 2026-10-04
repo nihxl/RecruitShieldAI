@@ -1,6 +1,6 @@
 # RecruitShield AI Progress Log
 
-**Next task:** Task 2.3: Accessible primitives (Radix wrappers)
+**Next task:** Task 2.4: Status map, microcopy and Trust gauge
 **Last updated:** 2026-10-04
 
 ## Decisions
@@ -36,7 +36,7 @@
 | 1.4 CI/CD and environments | Done | 71c911a | Configured GitHub Actions with Lighthouse CI, pinned Node to 22, and documented Vercel/Neon preview plan |
 | 2.1 Navigation and structural shell | Done | 99f2de0 | Built TopBar, Footer, and structural shell with unique document titles. check-design fails on favicon/OG SVGs due to excluding only Icon.tsx. |
 | 2.2 Base interactive elements | Done | 7d2dd07 | Built Button, Input, Textarea, Chip, ProgressBar, Modal, and Toast with Radix and Tailwind v4. Added sandbox page and unit tests. |
-| 2.3 Accessible primitives (Radix wrappers) | Pending | | |
+| 2.3 Accessible primitives (Radix wrappers) | Done | {commit} | Built Accordion and Tooltip with Radix UI, added destructive variant to Modal. Added touch support to Tooltip. Updated sandbox and tests. |
 | 2.4 Status map, microcopy and Trust gauge | Pending | | |
 | 2.5 Content cards and data display | Pending | | |
 | 2.6 Feedback blocks and labels | Pending | | |
@@ -62,6 +62,7 @@
 | 6.5 Final review against DoD | Pending | | |
 
 ## Session notes
+- Completed Task 2.3: Built Accessible primitives (Accordion, Tooltip) with Radix UI. Added `destructive-confirm` variant to Modal. Configured Accordion for locked and added states with smooth chevron rotation. Tooltip handles keyboard focus, hover, and tap natively via custom state and touch handlers. Updated `/sandbox` with all variants and unit tested interactions.
 - Completed Task 2.2: Built base interactive elements (Button, Input, Textarea, Chip, ProgressBar, Modal, Toast) conforming to DD §4 requirements. Reused Icon component. Integrated Radix UI for Modal. Implemented character counter with error coloring limit in Textarea. Added `/sandbox` page to showcase all variants and states. Added unit tests for key behaviours. Verified motion-reduce support.
 
 - Completed Task 2.1: Built `TopBar` and `Footer` components. Implemented the layout shell with skip-to-content link, landmarks, and unique document titles using Next.js `metadata.template`. Navigation highlights active items and includes a mobile hamburger sheet. Verified `check-design.sh` fails on `favicon.svg` and `opengraph-image.svg` after updating it to exclude ONLY `Icon.tsx`. Tests and linting pass.
