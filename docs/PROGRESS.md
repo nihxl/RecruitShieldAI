@@ -34,9 +34,9 @@
 | 1.2 Design tokens and typography | Done | 6b40f52 | Created theme.css with all design tokens, configured Public Sans font, and added a design check script |
 | 1.3 Icons and brand assets | Done | bfab36b | Generated inline Icon component with @material-symbols/svg-400, created favicon/OG images, and added unit tests |
 | 1.4 CI/CD and environments | Done | 71c911a | Configured GitHub Actions with Lighthouse CI, pinned Node to 22, and documented Vercel/Neon preview plan |
-| 2.1 Navigation and structural shell | Done | 99f2de0 | Built TopBar, Footer, and structural shell with unique document titles. check-design fails on favicon/OG SVGs due to excluding only Icon.tsx. |
+| 2.1 Navigation and structural shell | Done | 99f2de0 | Built TopBar, Footer, and structural shell with unique document titles. |
 | 2.2 Base interactive elements | Done | 7d2dd07 | Built Button, Input, Textarea, Chip, ProgressBar, Modal, and Toast with Radix and Tailwind v4. Added sandbox page and unit tests. |
-| 2.3 Accessible primitives (Radix wrappers) | Done | {commit} | Built Accordion and Tooltip with Radix UI, added destructive variant to Modal. Added touch support to Tooltip. Updated sandbox and tests. |
+| 2.3 Accessible primitives (Radix wrappers) | Done | 9bca00b | Built Accordion and Tooltip with Radix UI, added destructive variant to Modal. Added touch support to Tooltip. Updated sandbox and tests. |
 | 2.4 Status map, microcopy and Trust gauge | Pending | | |
 | 2.5 Content cards and data display | Pending | | |
 | 2.6 Feedback blocks and labels | Pending | | |
