@@ -1,7 +1,7 @@
 # RecruitShield AI Progress Log
 
 **Next task:** Task 2.6: Feedback blocks and labels
-**Last updated:** 2026-10-04
+**Last updated:** 2026-10-04 (housekeeping pre-2.6)
 
 ## Decisions
 - Accounts: Anonymous for now
@@ -25,6 +25,7 @@
 
 ## Known issues / follow-ups
 - /sandbox must be removed or gated before production (Task 6.4).
+- Task 2.5 component prop types (ModuleCardProps, FindingCardProps, HighlightedPhraseProps, etc.) are local and minimal. They must be aligned with the Zod contract once Task 3.1 exists.
 
 ## Task log
 

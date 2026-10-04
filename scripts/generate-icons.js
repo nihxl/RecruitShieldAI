@@ -38,6 +38,7 @@ const iconsMap = {
   'more_vert': 'more_vert',
   'chat': 'chat',
   'mail': 'mail',
+  'analytics': 'analytics',
 };
 
 const svgDir = path.join(__dirname, '../node_modules/@material-symbols/svg-400/outlined');

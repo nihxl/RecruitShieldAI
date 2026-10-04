@@ -28,7 +28,7 @@ const ICON_CLS: Record<StatCardVariant, string> = {
 };
 
 const DEFAULT_ICON: Record<StatCardVariant, IconName> = {
-  'total':       'shield',
+  'total':       'analytics',
   'high-trust':  'verified',
   'caution':     'warning',
   'in-progress': 'progress_activity',

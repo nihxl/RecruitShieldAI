@@ -92,7 +92,9 @@ export function ModuleCard(props: ModuleCardProps) {
     mode === 'expandable' && (props as ModuleCardExpandableProps).defaultOpen === true
   );
 
-  const borderCls = isAlert || isLocked || variant === 'simulated'
+  // DD §4: 4px status-color left border for alert states only (caution, fail, error).
+  // pass, locked and simulated have no colored border.
+  const borderCls = isAlert
     ? `border-l-4 ${colorCls.border}`
     : 'border-l-4 border-l-transparent';
 
