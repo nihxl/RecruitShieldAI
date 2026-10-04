@@ -1,6 +1,6 @@
 # RecruitShield AI Progress Log
 
-**Next task:** Task 2.5: Content cards and data display
+**Next task:** Task 2.6: Feedback blocks and labels
 **Last updated:** 2026-10-04
 
 ## Decisions
@@ -38,7 +38,7 @@
 | 2.2 Base interactive elements | Done | 7d2dd07 | Built Button, Input, Textarea, Chip, ProgressBar, Modal, and Toast with Radix and Tailwind v4. Added sandbox page and unit tests. |
 | 2.3 Accessible primitives (Radix wrappers) | Done | 9bca00b | Built Accordion and Tooltip with Radix UI, added destructive variant to Modal. Added touch support to Tooltip. Updated sandbox and tests. |
 | 2.4 Status map, microcopy and Trust gauge | Done | 16f7119 | Built microcopy constants, status band map module, and animated TrustGauge component. Tested and added to sandbox. |
-| 2.5 Content cards and data display | Pending | | |
+| 2.5 Content cards and data display | Done | 4878ec2c | Built ModuleCard (6 variants, expandable, navigating), FindingCard (rule/model), HighlightedPhrase, InfoBanner, StatCard, DataTable. 66 tests pass. |
 | 2.6 Feedback blocks and labels | Pending | | |
 | 3.1 Analysis contract and validation | Pending | | |
 | 3.2 Band logic, flag rules and score cap | Pending | | |
@@ -62,7 +62,8 @@
 | 6.5 Final review against DoD | Pending | | |
 
 ## Session notes
-- Completed Task 2.4: Built `constants.ts` with DD §10 microcopy strings and `statusMap.ts` holding the score-to-band logic and band definitions. Built the `TrustGauge` SVG component with aria attributes (`role="meter"`) and entry animation. Added all variants and sizes (sm, md, lg) to `/sandbox`. Unit tested the band function edge cases and gauge aria attributes.
+- **Housekeeping (pre-2.5, commit a6607269):** Corrected Next.js version in Assumptions from 15 → 16.3.8 (verified via `npm ls next`). Proved `check-design.sh` fails on a hex color in Button.tsx and reverted. Compared `constants.ts` against DD §10 word-for-word — exact match. Compared `statusMap.ts` against DD §3.2: two differences found and fixed: (1) Simulated colorRole was `tertiary`, corrected to `tertiary-outline`; (2) Error label was `"Error"`, corrected to `"Something went wrong"`. Added `tertiary-outline` to the `ColorRole` union.
+- Completed Task 2.5: Built six components per DD §4. ModuleCard: 6 variants (pass/caution/fail/locked/simulated/error), expandable mode (real button, aria-expanded/controls, 300ms reveal), navigating mode (Link, chevron-right), locked (aria-disabled, no hover). FindingCard: rule-based shows severity chip only; model-calibrated shows Confidence chip with percentage; quote block uses surface bg and 2px tertiary-container left border. HighlightedPhrase: pure React text nodes, no dangerouslySetInnerHTML; normalises, clamps, merges overlapping/adjacent spans; UTF-16 offset contract documented; Tooltip from Task 2.3 on every highlight. InfoBanner: info and caution variants, tertiary-container 20%/30% fill/border. StatCard: card radius 24, 4px left border by variant. DataTable: label-caps headers, 24px padding, row hover, scrollable container, stacked-card mobile layout below 640px. All sandbox demos (long-word, HTML safety, 360px-wide table, empty state). 66 tests pass, lint clean, typecheck clean, design check clean.
 - Completed Task 2.3: Built Accessible primitives (Accordion, Tooltip) with Radix UI. Added `destructive-confirm` variant to Modal. Configured Accordion for locked and added states with smooth chevron rotation. Tooltip handles keyboard focus, hover, and tap natively via custom state and touch handlers. Updated `/sandbox` with all variants and unit tested interactions.
 - Completed Task 2.2: Built base interactive elements (Button, Input, Textarea, Chip, ProgressBar, Modal, Toast) conforming to DD §4 requirements. Reused Icon component. Integrated Radix UI for Modal. Implemented character counter with error coloring limit in Textarea. Added `/sandbox` page to showcase all variants and states. Added unit tests for key behaviours. Verified motion-reduce support.
 
