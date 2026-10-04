@@ -11,11 +11,14 @@ export type FlagDef = {
 
 /**
  * ASSUMPTION (Flag definitions & Microcopy):
- * Flag titles and descriptions are newly written in the direct, objective voice 
+ * Flag titles and descriptions are written in the direct, objective voice 
  * per DD §2. The severity mapping is as follows:
- * - upfront_payment: high (triggers cap at 39)
- * - premature_pii: high (triggers cap at 39)
+ * - upfront_payment: high
+ * - premature_pii: high
+ * - artificial_urgency: medium
  * - off_platform_contact: medium
+ * - unrealistic_compensation: medium
+ * - vague_role: low
  */
 export const FLAG_RULES: FlagDef[] = [
   {
@@ -28,9 +31,9 @@ export const FLAG_RULES: FlagDef[] = [
   },
   {
     type: 'artificial_urgency',
-    title: 'High Pressure Tactics',
+    title: 'Artificial Urgency',
     severity: 'medium',
-    description: 'Scammers often create a false sense of urgency to rush you into making a mistake.',
+    description: 'Pressuring applicants to act immediately is often used to prevent careful review of the opportunity.',
     pattern: /(?:act|apply|respond|pay)\s+(?:now|immediately|urgent|within\s+\d+\s+(?:mins?|hours?))|limited\s+(?:time|seats?|slots?)/gi,
   },
   {
@@ -47,6 +50,20 @@ export const FLAG_RULES: FlagDef[] = [
     severity: 'medium',
     description: 'Communicating exclusively through messaging apps like WhatsApp or Telegram hides the recruiter\'s identity.',
     pattern: /(?:contact|msg|message|ping|reach\s+out)(?:\s+us|\s+me)?\s+(?:only\s+)?(?:on|via)\s+(?:whatsapp|telegram|wa)/gi,
+  },
+  {
+    type: 'unrealistic_compensation',
+    title: 'Unrealistic Compensation',
+    severity: 'medium',
+    description: 'Compensation that significantly exceeds industry standards for the role\'s requirements warrants careful verification.',
+    pattern: /(?:earn|make|salary|pay)\s+(?:up\s+to\s+)?(?:₹|rs\.?|inr)?\s*(?:[5-9]\d{4,}|[1-9]\d{5,})\s+(?:per\s+month|pm|monthly|a\s+month)/gi,
+  },
+  {
+    type: 'vague_role',
+    title: 'Vague Role Description',
+    severity: 'low',
+    description: 'Listings lacking specific job duties or verifiable company information make it difficult to assess the opportunity.',
+    pattern: /(?:no\s+(?:experience|skills|resume|interview)\s+(?:needed|required))|(?:easy\s+work|work\s+from\s+home|wfh)\s+(?:and\s+earn)/gi,
   }
 ];
 

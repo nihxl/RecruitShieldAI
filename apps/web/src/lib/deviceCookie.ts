@@ -1,5 +1,4 @@
 import { cookies } from 'next/headers';
-import { v4 as uuidv4 } from 'uuid';
 
 export const COOKIE_NAME = 'rs_device';
 
@@ -11,7 +10,7 @@ export async function getOrCreateDeviceCookie() {
     return existingCookie.value;
   }
 
-  const newDeviceId = uuidv4();
+  const newDeviceId = crypto.randomUUID();
   
   cookieStore.set(COOKIE_NAME, newDeviceId, {
     httpOnly: true,
