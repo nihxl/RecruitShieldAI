@@ -7,16 +7,16 @@
 - Accounts: Anonymous for now
 - Stored data: Result plus submitted text for 30 days
 - Share Report: Skipped
-- Payment-request rule (OQ-6): Force High Risk (score capped at 39)
-- DEMO_FULL (OQ-5): Built as environment switch, off by default
+- Payment-request rule (OD-6): Force High Risk (score capped at 39)
+- DEMO_FULL (OD-5): Built as environment switch, off by default
 - Constraints: Free tier only
-- **OQ-1:** Icons vs strict CSP. Recommendation: use npm SVG package only, drop Google Fonts fallback.
-- **OQ-2:** Redundant "Recent" filter. Needs product-owner decision.
-- **OQ-3:** Success color. Pass states use secondary with icon and label.
-- **OQ-4:** DESIGN.md vs Design Document. Design Document wins (role-based radius, top bar).
-- **OQ-5:** Mock failure hook. Scenario D needs a way to force an error. Proposed as dev/test-only switch.
-- **OQ-6:** Title and company max length. Proposed 120 characters each.
-- **OQ-7:** CSP and Next.js inline scripts. Verify against current Next.js docs.
+- **OD-1 (Decided):** Icons vs strict CSP. Recommendation: use npm SVG package only, drop Google Fonts fallback.
+- **OD-2 (Open):** Redundant "Recent" filter. Needs product-owner decision.
+- **OD-3:** Success color. Pass states use secondary with icon and label.
+- **OD-4:** DESIGN.md vs Design Document. Design Document wins (role-based radius, top bar).
+- **OD-5 (Decided):** Mock failure hook. Scenario D needs a way to force an error. Proposed as dev/test-only switch.
+- **OD-6 (Decided):** Title and company max length. Proposed 120 characters each.
+- **OD-7:** CSP and Next.js inline scripts. Verify against current Next.js docs.
 
 ## Assumptions
 - Next.js 15 uses Tailwind v4 setup which no longer requires a `tailwind.config.js` file, so scaffolding `--tailwind` creates the correct v4 setup. We updated the TS §13.1 deps command to use workspaces so Next.js dependencies go to apps/web and other dependencies like concurrently go to root.
