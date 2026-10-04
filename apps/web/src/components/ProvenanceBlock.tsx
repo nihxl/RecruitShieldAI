@@ -14,22 +14,11 @@
 
 import React from 'react';
 import { MICROCOPY } from '@/lib/constants';
-
-// ── Local minimal type (Task 3.1 will replace this) ─────────────────────────
-
-export type ProvenanceSource = 'model' | 'rules' | 'mock';
-
-export interface Provenance {
-  source: ProvenanceSource;
-  /** Required when source is "model"; ignored otherwise. */
-  modelVersion?: string;
-  /** ISO-8601 timestamp string. */
-  generatedAt: string;
-}
+import type { ProvenanceInfo } from '@/lib/AnalysisContract';
 
 export interface ProvenanceBlockProps {
   disclaimer?: string;
-  provenance: Provenance;
+  provenance: ProvenanceInfo;
   /** Also render the UTC timestamp alongside local time. Default false. */
   showUtc?: boolean;
   className?: string;
@@ -37,7 +26,7 @@ export interface ProvenanceBlockProps {
 
 // ── Provenance source wording (PRD §5 Honesty rule) ─────────────────────────
 
-function formatSource(provenance: Provenance): string {
+function formatSource(provenance: ProvenanceInfo): string {
   switch (provenance.source) {
     case 'mock':
       return 'Source: Mock analyzer. Example logic, not a trained model.';

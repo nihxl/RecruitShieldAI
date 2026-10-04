@@ -1,9 +1,10 @@
 import React from 'react';
 import { Icon, IconName } from './Icon';
 import { Chip } from './Chip';
+import type { LanguageFlag } from '@/lib/AnalysisContract';
 
 // DD §4 Finding card | FR-4.1
-export type FindingSeverity = 'High' | 'Medium' | 'Low';
+export type FindingSeverity = LanguageFlag['severity']; // 'high' | 'medium' | 'low'
 
 interface BaseFindingCardProps {
   icon?: IconName;
@@ -28,15 +29,15 @@ interface ModelFindingCardProps extends BaseFindingCardProps {
 export type FindingCardProps = RuleBasedFindingCardProps | ModelFindingCardProps;
 
 const SEVERITY_ICON: Record<FindingSeverity, IconName> = {
-  High: 'gpp_maybe',
-  Medium: 'warning',
-  Low: 'info',
+  high: 'gpp_maybe',
+  medium: 'warning',
+  low: 'info',
 };
 
 const SEVERITY_CHIP_STATUS = {
-  High: 'High Risk',
-  Medium: 'Caution Advised',
-  Low: 'Likely Genuine',
+  high: 'High Risk',
+  medium: 'Caution Advised',
+  low: 'Likely Genuine',
 } as const;
 
 export function FindingCard(props: FindingCardProps) {
@@ -72,7 +73,7 @@ export function FindingCard(props: FindingCardProps) {
               <Chip
                 variant="status"
                 status={SEVERITY_CHIP_STATUS[props.severity] as import('./Chip').StatusBand}
-                label={props.severity}
+                label={props.severity.charAt(0).toUpperCase() + props.severity.slice(1)}
               />
             )}
 

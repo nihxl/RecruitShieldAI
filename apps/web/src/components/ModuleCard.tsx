@@ -4,8 +4,11 @@ import Link from 'next/link';
 import { Icon } from './Icon';
 import { STATUS_BANDS, type BandId } from '@/lib/statusMap';
 
+import type { ModuleResult } from '@/lib/AnalysisContract';
+
 // FR-3.3, FR-3.4 | DD §4 Module card
-export type ModuleCardVariant = 'pass' | 'caution' | 'fail' | 'locked' | 'simulated' | 'error';
+export type ModuleCardVariant = NonNullable<ModuleResult['verdict']> | Exclude<ModuleResult['status'], 'complete'>;
+
 
 interface ModuleCardBaseProps {
   title: string;

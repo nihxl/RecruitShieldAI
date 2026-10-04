@@ -20,10 +20,9 @@
 import React from 'react';
 import { Tooltip } from './Tooltip';
 
-export interface Span {
-  start: number;
-  end: number;
-}
+import type { LanguageFlag } from '@/lib/AnalysisContract';
+
+export type Span = LanguageFlag['span'];
 
 export interface HighlightedPhraseProps {
   /** The plain text to display. Rendered as text nodes — never as HTML. */
