@@ -1,6 +1,6 @@
 # RecruitShield AI Progress Log
 
-**Next task:** Task 4.2: API routes
+**Next task:** Task 4.3: Purge job
 **Last updated:** 2026-10-04
 
 ## Decisions
@@ -27,8 +27,6 @@
 ## Known issues / follow-ups
 - **Credential Exposure:** The Neon database password was briefly exposed in the repository history (`vercelpreview.txt`). The password was rotated by the product owner on 2026-10-04.
 - /sandbox must be removed or gated before production (Task 6.4).
-- **Assumption (needs product-owner review — Task 3.2 Rules):** Flag microcopy defined as: (1) `upfront_payment` (severity: high) -> Title: "Payment Requested", Desc: "Legitimate employers never ask for payment, deposits, or equipment fees before hiring." (2) `premature_pii` (severity: high) -> Title: "Early Sensitive Information Request", Desc: "Asking for PAN, Aadhaar, or bank details before a formal offer is a severe privacy risk." (3) `off_platform_contact` (severity: medium) -> Title: "Unverifiable Contact Method", Desc: "Communicating exclusively through messaging apps like WhatsApp or Telegram hides the recruiter's identity."
-
 
 ## Task log
 
@@ -48,7 +46,7 @@
 | 3.2 Band logic, flag rules and score cap | Done | adf11568 | Built `rules.ts` with flag extraction (UTF-16 spans match exactly, negations skip matches, no confidence for rules) and `applyScoreCap` (idempotent, never raises score). Covered Indian scams. |
 | 3.3 Analyzer interface and mock analyzer | Done | 0df235cd | Built `Analyzer` interface and `MockAnalyzer` implementation. Fully deterministic scoring based on text patterns, injectable clock for tests, and dev/test failure hook handling. Validated against Zod contract. |
 | 4.1 Database schema and device cookie | Done | 9233945 | Configured Drizzle schema for `checks` table, built `rs_device` cookie utility, generated migration and set up Neon serverless connection. Cookie correctly strictly enforces httpOnly, secure, and SameSite Lax policies. |
-| 4.2 API routes | Done | 8a0cd01c | Built API routes for POST, GET list, GET single, DELETE. Mocked db in tests for 429, 404, list and privacy checking. Fixed all lint and test issues. |
+| 4.2 API routes | Done | e108f09f | Built API routes for POST, GET list, GET single, DELETE. Mocked db in tests for 429, 404, list and privacy checking. Fixed all lint and test issues. |
 | 4.3 Purge job | Pending | | |
 | 5.1 Verify screen (/) | Pending | | |
 | 5.2 Shield shader component | Pending | | |
