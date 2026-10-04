@@ -1,0 +1,23 @@
+{
+  "name": "recruitshield",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "^22.22.2"
+  },
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w web\" \"cd services/model && uvicorn app.main:app --reload\"",
+    "build": "npm run build -w web",
+    "test": "npm run test -w web",
+    "test:e2e": "npm run test:e2e -w web",
+    "lint": "npm run lint -w web",
+    "typecheck": "npm run typecheck -w web"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5",
+    "prettier": "^3.9.9"
+  }
+}
