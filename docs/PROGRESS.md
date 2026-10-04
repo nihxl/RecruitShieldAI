@@ -1,6 +1,6 @@
 # RecruitShield AI Progress Log
 
-**Next task:** Task 5.1: Verify screen (/)
+**Next task:** Task 5.2: Shield shader component
 **Last updated:** 2026-10-04
 
 ## Decisions
@@ -48,7 +48,7 @@
 | 4.1 Database schema and device cookie | Done | 9233945 | Configured Drizzle schema for `checks` table, built `rs_device` cookie utility, generated migration and set up Neon serverless connection. Cookie correctly strictly enforces httpOnly, secure, and SameSite Lax policies. |
 | 4.2 API routes | Done | e108f09f | Built API routes for POST, GET list, GET single, DELETE. Mocked db in tests for 429, 404, list and privacy checking. Fixed all lint and test issues. |
 | 4.3 Purge job | Done | 0bde6ae8 | Built purge job at /api/cron/purge, returns 401 without secret, defaults to 30 days retention. Moved vercel.json to apps/web/vercel.json. Implemented constant-time comparison. Tests pass. |
-| 5.1 Verify screen (/) | Done | {commit} | Built Verify screen at `/`. Extracted metadata to server component, built main form in `VerifyClient.tsx`. Form captures job text, optional title/company, validates length, shows error state if short, handles mock submit and redirects to `/results/:id`. Integrated `Accordion` with locked states for non-text inputs in preview. Analysis readiness bar shows in full demo mode only. |
+| 5.1 Verify screen (/) | Done | 4447e97c | Built Verify screen at `/`. Extracted metadata to server component, built main form in `VerifyClient.tsx`. Form captures job text, optional title/company, validates length, shows error state if short, handles mock submit and redirects to `/results/:id`. Integrated `Accordion` with locked states for non-text inputs in preview. Analysis readiness bar shows in full demo mode only. |
 | 5.2 Shield shader component | Pending | | |
 | 5.3 Analyzing view | Pending | | |
 | 5.4 Results dashboard, PREVIEW | Pending | | |
