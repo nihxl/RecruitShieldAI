@@ -16,6 +16,7 @@ export default function VerifyPage({ appMode }: { appMode?: string }) {
 
   React.useEffect(() => {
     const savedText = sessionStorage.getItem('rs_draft_jobText');
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (savedText) setJobText(savedText);
     const savedTitle = sessionStorage.getItem('rs_draft_jobTitle');
     if (savedTitle) setJobTitle(savedTitle);

@@ -5,12 +5,18 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/Button';
 import { ErrorBlock } from '@/components/FeedbackBlocks';
 import { ShieldShaderDynamic } from '@/components/ShieldShaderDynamic';
+import { TrustGauge } from '@/components/TrustGauge';
+import { ModuleCard } from '@/components/ModuleCard';
+import { InfoBanner } from '@/components/InfoBanner';
+import { ProvenanceBlock } from '@/components/ProvenanceBlock';
+import { getBandForScore } from '@/lib/statusMap';
 import { MICROCOPY } from '@/lib/constants';
+import type { CompleteAnalysisOutput, ModuleResult } from '@/lib/AnalysisContract';
 
 export default function ResultsClient({ checkId, appMode }: { checkId: string, appMode?: string }) {
   const router = useRouter();
   const [status, setStatus] = useState<'loading' | 'processing' | 'complete' | 'error' | 'not-found'>('loading');
-  const [resultData, setResultData] = useState<any>(null);
+  const [resultData, setResultData] = useState<CompleteAnalysisOutput | null>(null);
   
   // Checklist states
   const [checklistStage, setChecklistStage] = useState(0); // 0: lang running, 1: lang complete
@@ -43,7 +49,7 @@ export default function ResultsClient({ checkId, appMode }: { checkId: string, a
           setStatus('error');
           isProcessing = false;
         }
-      } catch (err) {
+      } catch (_err) {
         setStatus('error');
         isProcessing = false;
       }
@@ -69,11 +75,13 @@ export default function ResultsClient({ checkId, appMode }: { checkId: string, a
       clearInterval(poller);
       clearInterval(timer);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkId]);
 
   // Handle stage transitions based on elapsed time and resultData
   useEffect(() => {
     if (elapsed >= 2 && checklistStage === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setChecklistStage(1);
     }
   }, [elapsed, checklistStage]);
@@ -102,19 +110,79 @@ export default function ResultsClient({ checkId, appMode }: { checkId: string, a
     );
   }
 
-  if (status === 'complete' && elapsed >= 3) {
-    // Temporary stub until Task 5.4
+  if (status === 'complete' && elapsed >= 3 && resultData) {
+    const band = getBandForScore(resultData.trustScore);
+    const langResult = resultData.modules?.find((m: ModuleResult) => m.key === 'language');
+    const langVariant = langResult?.verdict || 'pass';
+
     return (
-      <div className="flex-grow flex items-center justify-center p-8 flex-col gap-4">
-        <h1 className="text-h1-desktop text-primary">Results Stub</h1>
-        <p className="text-body-lg text-on-surface">Score: {resultData?.trustScore}</p>
-        <p className="text-body-lg text-on-surface">Band: {resultData?.band}</p>
-        <Button onClick={() => {
-           sessionStorage.removeItem('rs_draft_jobText');
-           sessionStorage.removeItem('rs_draft_jobTitle');
-           sessionStorage.removeItem('rs_draft_companyName');
-           router.push('/');
-        }}>Check Another</Button>
+      <div className="flex-grow pt-[40px] md:pt-[80px] pb-xl px-margin-mobile md:px-margin-desktop max-w-[1280px] mx-auto w-full">
+        {/* Header Section */}
+        <div className="flex flex-col items-center text-center mb-lg">
+          <h1 className="text-h2-desktop font-bold mb-sm">Analysis Results</h1>
+          <p className="text-body-md text-on-surface-variant max-w-2xl">
+            Job Posting{resultData.input?.jobTitle ? ` for "${resultData.input.jobTitle}"` : ''}{resultData.input?.companyName ? ` at ${resultData.input.companyName}` : ''}
+          </p>
+        </div>
+
+        {/* Dashboard Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+          {/* Left Column: Trust Score Gauge */}
+          <div className="lg:col-span-4 flex flex-col items-center order-1">
+            <div className="bg-surface-container-low rounded-[var(--radius-card)] p-gutter w-full shadow-[var(--shadow-level-2)] flex flex-col items-center justify-center relative">
+              <h2 className="text-h3-desktop font-bold mb-md self-start w-full">Trust Score</h2>
+              <TrustGauge score={resultData.trustScore} size="md" className="mb-md" />
+              <div className="text-center">
+                <span className={`text-h3-desktop font-bold block mb-1 ${band.colorRole === 'secondary' ? 'text-secondary' : band.colorRole === 'tertiary' ? 'text-tertiary' : band.colorRole === 'error' ? 'text-error' : 'text-primary'}`}>{band.label}</span>
+                <span className="text-body-sm text-on-surface-variant block">{band.summary}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Modules and Info */}
+          <div className="lg:col-span-8 flex flex-col gap-md order-2">
+            <InfoBanner>
+              This preview currently analyzes job posting text only. Document, company, and link verification are launching soon.
+            </InfoBanner>
+
+            <div className="flex flex-col gap-sm">
+              <ModuleCard
+                mode="navigating"
+                href={`/results/${checkId}/language`}
+                title="Language Analysis"
+                variant={langVariant}
+                summary={langResult?.headline}
+              />
+              <ModuleCard mode="static" title="Document Check" variant="locked" />
+              <ModuleCard mode="static" title="Company Verification" variant="locked" />
+              <ModuleCard mode="static" title="Link Safety" variant="locked" />
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-sm mt-md justify-end">
+              <Button
+                variant="secondary"
+                icon="download"
+                onClick={() => router.push(`/report/${checkId}`)}
+              >
+                Download Full Report
+              </Button>
+              <Button
+                variant="primary"
+                icon="search"
+                onClick={() => {
+                  sessionStorage.removeItem('rs_draft_jobText');
+                  sessionStorage.removeItem('rs_draft_jobTitle');
+                  sessionStorage.removeItem('rs_draft_companyName');
+                  router.push('/');
+                }}
+              >
+                Check Another
+              </Button>
+            </div>
+
+            <ProvenanceBlock provenance={resultData.provenance} disclaimer={resultData.disclaimer} className="mt-8" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -145,7 +213,7 @@ export default function ResultsClient({ checkId, appMode }: { checkId: string, a
               {checklistStage === 1 && <span className="text-body-sm text-secondary">Complete</span>}
            </div>
 
-           {(appMode === 'demo_full' ? ['Document Check', 'Company Verification', 'Link Safety'] : ['Document Check', 'Company Verification', 'Link Safety']).map((name, i) => (
+           {(appMode === 'demo_full' ? ['Document Check', 'Company Verification', 'Link Safety'] : ['Document Check', 'Company Verification', 'Link Safety']).map((name) => (
              <div key={name} className="flex items-center gap-4 opacity-50">
                 <span className="text-[24px] material-symbols-rounded text-outline">lock</span>
                 <span className="text-body-md text-on-surface-variant flex-grow">{name}</span>

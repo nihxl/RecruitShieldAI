@@ -11,6 +11,7 @@ vi.mock('next/navigation', () => ({
 
 describe('VerifyClient', () => {
   beforeEach(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     global.fetch = vi.fn() as any;
   });
 
@@ -32,6 +33,7 @@ describe('VerifyClient', () => {
   });
 
   it('allows submission if text is over 100 characters', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ id: 'RS-1234-ABC' })
