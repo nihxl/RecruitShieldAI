@@ -1,6 +1,6 @@
 # RecruitShield AI Progress Log
 
-**Next task:** Task 1.1: Project initialization and monorepo
+**Next task:** Task 1.2: Design tokens and typography
 **Last updated:** 2026-10-04
 
 ## Decisions
@@ -19,7 +19,8 @@
 - **OQ-7:** CSP and Next.js inline scripts. Verify against current Next.js docs.
 
 ## Assumptions
-- (Will log assumptions here as they are made)
+- Next.js 15 uses Tailwind v4 setup which no longer requires a `tailwind.config.js` file, so scaffolding `--tailwind` creates the correct v4 setup. We updated the TS §13.1 deps command to use workspaces so Next.js dependencies go to apps/web and other dependencies like concurrently go to root.
+- Used npm workspaces directly to manage deps efficiently across the Next.js app and the model service directory.
 
 ## Known issues / follow-ups
 - (Will log known issues here)
@@ -28,7 +29,7 @@
 
 | Task | Status | Commit | Notes |
 | --- | --- | --- | --- |
-| 1.1 Project initialization and monorepo | In Progress | | |
+| 1.1 Project initialization and monorepo | Done | bcb2ceb | Scaffolded monorepo, web app, configured CI, and installed dependencies |
 | 1.2 Design tokens and typography | Pending | | |
 | 1.3 Icons and brand assets | Pending | | |
 | 1.4 CI/CD and environments | Pending | | |
@@ -60,4 +61,4 @@
 | 6.5 Final review against DoD | Pending | | |
 
 ## Session notes
-- Initialized Task 1.1, scaffolding monorepo, Next.js app, installing dependencies.
+- Completed Task 1.1: scaffolded monorepo, web app, configured CI, installed all dependencies, created root scripts and verified all checks (lint, typecheck, test) pass successfully.
