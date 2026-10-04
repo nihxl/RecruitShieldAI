@@ -25,3 +25,6 @@
 13. Record every assumption and every invented string in PROGRESS.md. Never invent microcopy silently.
 14. Do not edit anything under docs/ except PROGRESS.md. Source documents are read-only for agents.
 15. Do one task per session. When it is done, summarize and stop. Do not start the next task unless told to.
+16. Never force-push, never amend a pushed commit, and never rewrite history. If something needs history changes, stop and ask me.
+17. Run `git status` before committing. Never use `git add .` without checking what it will add. No secrets, test output or scratch files.
+18. Stay inside the current task's scope. If you must change files from an earlier task, tell me exactly what and why before doing it.
