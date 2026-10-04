@@ -42,7 +42,7 @@ function formatSource(provenance: Provenance): string {
     case 'mock':
       return 'Source: Mock analyzer. Example logic, not a trained model.';
     case 'rules':
-      return 'Source: Pattern rules';
+      return 'Source: Pattern rules (not a trained model)';
     case 'model': {
       const ver = provenance.modelVersion ?? 'unknown';
       return `Source: Trained model ${ver}`;

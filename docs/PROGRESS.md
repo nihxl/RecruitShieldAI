@@ -17,6 +17,7 @@
 - **OD-5 (Decision):** Mock failure hook. Scenario D needs a way to force an error. Built as dev/test-only switch.
 - **OD-6 (Decision):** Title and company max length. Set to 120 characters each.
 - **OD-7:** CSP and Next.js inline scripts. Verify against current Next.js docs.
+- **OD-8 (Decision):** Provenance wording finalized. mock = "Source: Mock analyzer. Example logic, not a trained model."; rules = "Source: Pattern rules (not a trained model)"; model = "Source: Trained model {modelVersion}".
 
 ## Assumptions
 - Next.js 16.3.8 uses Tailwind v4 setup which no longer requires a `tailwind.config.js` file, so scaffolding `--tailwind` creates the correct v4 setup. We updated the TS §13.1 deps command to use workspaces so Next.js dependencies go to apps/web and other dependencies like concurrently go to root.
@@ -26,7 +27,7 @@
 ## Known issues / follow-ups
 - /sandbox must be removed or gated before production (Task 6.4).
 - Task 2.5 component prop types (ModuleCardProps, FindingCardProps, HighlightedPhraseProps, etc.) are local and minimal. They must be aligned with the Zod contract once Task 3.1 exists.
-- **Assumption (needs product-owner confirmation — Task 2.6 ProvenanceBlock):** Provenance source wording: `mock` = "Source: Mock analyzer. Example logic, not a trained model."; `rules` = "Source: Pattern rules"; `model` = "Source: Trained model {modelVersion}" (falls back to "unknown" if modelVersion is absent). These strings are not in DD §10 and were invented locally. Please confirm or correct them before Task 5.4.
+
 
 ## Task log
 

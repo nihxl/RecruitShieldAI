@@ -182,13 +182,13 @@ describe('ProvenanceBlock', () => {
       expect(screen.getByText(/Source: Mock analyzer\. Example logic, not a trained model\./)).toBeTruthy();
     });
 
-    it('rules → "Source: Pattern rules"', () => {
+    it('rules → "Source: Pattern rules (not a trained model)"', () => {
       render(
         <ProvenanceBlock
           provenance={{ source: 'rules', generatedAt: GENERATED_AT }}
         />
       );
-      expect(screen.getByText(/Source: Pattern rules/)).toBeTruthy();
+      expect(screen.getByText(/Source: Pattern rules \(not a trained model\)/)).toBeTruthy();
     });
 
     it('model → "Source: Trained model {version}"', () => {
