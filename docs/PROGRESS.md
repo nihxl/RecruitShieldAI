@@ -1,6 +1,6 @@
 # RecruitShield AI Progress Log
 
-**Next task:** Task 1.2: Design tokens and typography
+**Next task:** Task 1.4: CI/CD and environments
 **Last updated:** 2026-10-04
 
 ## Decisions
@@ -21,6 +21,7 @@
 ## Assumptions
 - Next.js 15 uses Tailwind v4 setup which no longer requires a `tailwind.config.js` file, so scaffolding `--tailwind` creates the correct v4 setup. We updated the TS §13.1 deps command to use workspaces so Next.js dependencies go to apps/web and other dependencies like concurrently go to root.
 - Used npm workspaces directly to manage deps efficiently across the Next.js app and the model service directory.
+- Tailwind v4 natively supports mapping design tokens inside the `@theme` block in a regular `.css` file. We implemented `theme.css` with native CSS tokens that generate matching utility classes without extra Next.js configs.
 
 ## Known issues / follow-ups
 - (Will log known issues here)
@@ -30,8 +31,8 @@
 | Task | Status | Commit | Notes |
 | --- | --- | --- | --- |
 | 1.1 Project initialization and monorepo | Done | bcb2ceb | Scaffolded monorepo, web app, configured CI, and installed dependencies |
-| 1.2 Design tokens and typography | Pending | | |
-| 1.3 Icons and brand assets | Pending | | |
+| 1.2 Design tokens and typography | Done | 6b40f52 | Created theme.css with all design tokens, configured Public Sans font, and added a design check script |
+| 1.3 Icons and brand assets | Done | bfab36b | Generated inline Icon component with @material-symbols/svg-400, created favicon/OG images, and added unit tests |
 | 1.4 CI/CD and environments | Pending | | |
 | 2.1 Navigation and structural shell | Pending | | |
 | 2.2 Base interactive elements | Pending | | |
@@ -61,4 +62,6 @@
 | 6.5 Final review against DoD | Pending | | |
 
 ## Session notes
+- Completed Task 1.3: Updated check-design.sh to exclude SVGs, fixed generate-icons.js script to properly inline the SVGs from @material-symbols/svg-400 with the correct viewBox (0 -960 960 960). Renamed expand_more mapping to keyboard_arrow_down. Generated Icon component with inline SVGs to avoid layout shift. Added unit tests for the Icon component. Created favicon and opengraph share image per design document. Removed default Next.js icons.
+- Completed Task 1.2: Added theme.css with all defined design tokens, configured Public Sans via next/font/google, created a sample page to show all tokens, added `check-design.sh` to prevent hardcoded hex values, and verified everything works.
 - Completed Task 1.1: scaffolded monorepo, web app, configured CI, installed all dependencies, created root scripts and verified all checks (lint, typecheck, test) pass successfully.
